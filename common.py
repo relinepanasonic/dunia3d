@@ -27,8 +27,21 @@ def write_json(p, obj):
     Path(p).write_text(json.dumps(obj, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _slug(name):
+    return "".join(ch for ch in name.lower() if ch.isalnum())
+
+
 def config():
-    return read_json(SERIES / "config.json")
+    """series/config.json, with the country name replaced by series/brand.json (set by the name poll) when present."""
+    cfg = read_json(SERIES / "config.json")
+    bp = SERIES / "brand.json"
+    if bp.exists():
+        name = (read_json(bp).get("name") or "").strip()
+        if name and name != cfg["series_name"]:
+            old, new = "#" + _slug(cfg["series_name"]), "#" + _slug(name)
+            cfg["base_hashtags"] = [new if h.lower() == old else h for h in cfg["base_hashtags"]]
+            cfg["series_name"] = name
+    return cfg
 
 
 def day_dir(day):

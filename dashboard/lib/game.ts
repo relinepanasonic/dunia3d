@@ -9,7 +9,7 @@ export type Snapshot = {
 export type PlatformStat = { day: number; platform: string; followers: number; likes: number; shares: number; comments: number; views: number };
 export type Citizen = { platform: string; handle: string; coins: number; pengaruh: number; comments: number; comment_likes: number; mentions: number; votes: number };
 export type PollOption = { id: number; idx: number; label: string; building_name: string | null; style: number; pajak: number; votes: number };
-export type Poll = { id: number; title: string; question: string; status: string; closes_day: number | null; quorum: number; winner_idx: number | null; ng_poll_options: PollOption[] };
+export type Poll = { id: number; kind?: string; title: string; question: string; status: string; closes_day: number | null; quorum: number; winner_idx: number | null; ng_poll_options: PollOption[] };
 export type Report = { id: number; day: number; kind: string; title: string; body: string };
 
 export const STYLES = ["Kedai / dome", "Menara energi", "Stasiun maglev", "Klinik hologram", "Kampus berundak", "Kedutaan", "Stadion hover", "Pelabuhan orbit"];

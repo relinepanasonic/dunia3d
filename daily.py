@@ -39,6 +39,9 @@ def restore_bible(day):
 
 def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=False):
     load_env()
+    brand = sb.state_get("brand") if sb.configured() else None
+    if brand and brand.get("name"):  # the country name chosen by citizens (or set by an admin)
+        write_json(SERIES / "brand.json", brand)
     cfg = config()
     day = day or today_day(cfg)
     d = day_dir(day)
@@ -64,13 +67,16 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
         ids = ",".join(str(p["id"]) for p in open_polls)
         for o in sb.get(f"ng_poll_options?poll_id=in.({ids})&select=*&order=idx"):
             opts.setdefault(o["poll_id"], []).append(o)
-    poll_target, poll_reports, announce, new_votes, closed_ids = None, [], [], [], []
+    poll_target, poll_reports, announce, new_votes, closed_ids, new_name = None, [], [], [], [], None
     for poll in open_polls:
         options = opts.get(poll["id"], [])
         if poll.get("closes_day") is not None and poll["closes_day"] <= day:
             existing = sb.get(f"ng_votes?poll_id=eq.{poll['id']}&select=platform,handle,option_idx,source_id")
             votes, counts, winner = game.tally(poll, options, comments, existing)
-            building = game.poll_building(poll, options[winner], bible) if winner is not None else None
+            is_name = poll.get("kind") == "name"
+            building = game.poll_building(poll, options[winner], bible) if (winner is not None and not is_name) else None
+            if is_name and winner is not None and new_name is None:
+                new_name = options[winner]["label"].strip()
             poll_reports.append(game.poll_report(poll, options, counts, winner, building))
             for v in votes:
                 v["poll_id"] = poll["id"]
@@ -80,8 +86,18 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
             closed_ids.append((poll, options, counts, winner, votes))
         else:
             letters = "  ".join(f"{chr(65+o['idx'])}) {o['label']}" for o in options)
-            announce.append(f"POLLING TERBUKA: {poll['title']} - {poll['question']} Opsi: {letters}. "
+            announce.append(f"{'POLLING NAMA NEGARA' if poll.get('kind') == 'name' else 'POLLING TERBUKA'}: {poll['title']} - {poll['question']} Opsi: {letters}. "
                             f"Penonton voting dengan komen huruf/nama pilihan. Ditutup hari ke-{poll.get('closes_day')}.")
+
+    if new_name and not dry:
+        write_json(SERIES / "brand.json", {"name": new_name, "since_day": day})
+        if sb.configured():
+            sb.state_set("brand", {"name": new_name, "since_day": day})
+        print(f"[loop] country name is now: {new_name}")
+    elif new_name:
+        write_json(SERIES / "brand.json", {"name": new_name, "since_day": day})
+    if new_name:
+        announce.append(f"NAMA NEGARA BARU: {new_name}. Mulai sekarang negara ini bernama {new_name}; sebut nama baru ini dengan jelas di video.")
 
     # ---- 4. citizens: coins and influence (only what platforms expose)
     if sb.configured():  # citizens who comment their NG-code link their web account to that handle

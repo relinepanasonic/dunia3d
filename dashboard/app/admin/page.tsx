@@ -21,11 +21,12 @@ export default function Admin() {
   const [lastDay, setLastDay] = useState(0);
   const [ig, setIg] = useState({ followers: 0, likes: 0, shares: 0, comments: 0 });
   const [nc, setNc] = useState({ ig_user: "", text: "", likes: 0 });
-  const [np, setNp] = useState({ title: "", question: "", closes_day: 0, quorum: 3 });
+  const [np, setNp] = useState({ title: "", question: "", closes_day: 0, quorum: 3, kind: "building" });
+  const [brand, setBrand] = useState("");
   const [opts, setOpts] = useState<Opt[]>([blankOpt(), blankOpt()]);
 
   const load = useCallback(async () => {
-    const [b, c, e, a, p, r, s] = await Promise.all([
+    const [b, c, e, a, p, r, s, br] = await Promise.all([
       supabase.from("ng_buildings").select("*").order("slot"),
       supabase.from("ng_comments").select("*").order("likes", { ascending: false }).limit(100),
       supabase.from("ng_episodes").select("*").order("day", { ascending: false }),
@@ -33,7 +34,9 @@ export default function Admin() {
       supabase.from("ng_polls").select("*, ng_poll_options(*)").order("created_at", { ascending: false }),
       supabase.from("ng_reports").select("*").order("day", { ascending: false }).limit(5),
       supabase.from("ng_snapshots").select("day").order("day", { ascending: false }).limit(1),
+      supabase.from("ng_state").select("value").eq("key", "brand").maybeSingle(),
     ]);
+    setBrand(((br.data?.value as { name?: string } | null)?.name) ?? "");
     setBlds((b.data ?? []) as Building[]); setCms((c.data ?? []) as Cm[]); setEps((e.data ?? []) as Ep[]);
     setPolls((p.data ?? []) as Poll[]); setReports((r.data ?? []) as Report[]);
     const ld = s.data?.[0]?.day ?? 0; setLastDay(ld); setNp((x) => (x.closes_day ? x : { ...x, closes_day: ld + 2 }));
@@ -66,14 +69,20 @@ export default function Admin() {
   async function createPoll() {
     const clean = opts.filter((o) => o.label.trim());
     if (!np.title.trim() || !np.question.trim() || clean.length < 2) return bad("Isi judul, pertanyaan, dan minimal 2 opsi.");
-    const { data, error } = await supabase.from("ng_polls").insert({ title: np.title, question: np.question, closes_day: np.closes_day, quorum: np.quorum, status: "open" }).select().single();
+    const { data, error } = await supabase.from("ng_polls").insert({ title: np.title, question: np.question, closes_day: np.closes_day, quorum: np.quorum, status: "open", kind: np.kind }).select().single();
     if (error || !data) return bad(error?.message ?? "Gagal membuat polling.");
     const { error: e2 } = await supabase.from("ng_poll_options").insert(clean.map((o, i) => ({
-      poll_id: data.id, idx: i, label: o.label.trim(), building_name: o.building_name.trim() || o.label.trim(), style: o.style, pajak: o.pajak,
+      poll_id: data.id, idx: i, label: o.label.trim(), building_name: o.building_name.trim() || o.label.trim(), style: np.kind === "name" ? 0 : o.style, pajak: np.kind === "name" ? 0 : o.pajak,
       keywords: o.label.toLowerCase().split(/\s+/).filter((w) => w.length > 2),
     })));
     if (e2) return bad(e2.message);
-    ok("Polling dibuat. Episode berikutnya akan mengumumkannya; hasil dihitung saat tutup."); setNp({ title: "", question: "", closes_day: lastDay + 2, quorum: 3 }); setOpts([blankOpt(), blankOpt()]); load();
+    ok("Polling dibuat. Episode berikutnya akan mengumumkannya; hasil dihitung saat tutup."); setNp({ title: "", question: "", closes_day: lastDay + 2, quorum: 3, kind: "building" }); setOpts([blankOpt(), blankOpt()]); load();
+  }
+  async function saveBrand() {
+    const name = brand.trim();
+    if (name.length < 2 || name.length > 30) return bad("Nama negara 2-30 karakter.");
+    const { error } = await supabase.from("ng_state").upsert({ key: "brand", value: { name }, updated_at: new Date().toISOString() });
+    error ? bad(error.message) : ok(`Nama negara diubah menjadi "${name}". Tampil di website sekarang, di video mulai run berikutnya.`);
   }
   async function cancelPoll(id: number) { const { error } = await supabase.from("ng_polls").update({ status: "cancelled" }).eq("id", id); error ? bad(error.message) : load(); }
   async function closeNext(id: number) { const { error } = await supabase.from("ng_polls").update({ closes_day: lastDay + 1 }).eq("id", id); error ? bad(error.message) : (ok("Polling ditutup pada run berikutnya."), load()); }
@@ -96,6 +105,13 @@ export default function Admin() {
       <div className="page-head"><div><h1>Admin</h1><div className="sub">{user}</div></div><button className="ghost" onClick={() => supabase.auth.signOut()}>Keluar</button></div>
       {msg && <p className="msg">{msg}</p>}{err && <p className="msg err">{err}</p>}
 
+      <h2>Nama negara</h2>
+      <div className="card form">
+        <label style={{ flex: 1 }}>Nama saat ini<input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Negara Gue" style={{ width: "100%" }} /></label>
+        <button onClick={saveBrand}>Simpan nama</button>
+        <p className="empty" style={{ width: "100%", margin: 0 }}>Cara resmi: buat polling jenis &quot;Nama negara&quot; di bawah. Pemenangnya otomatis menjadi nama negara saat polling ditutup.</p>
+      </div>
+
       <h2>Event / polling baru</h2>
       <div className="card">
         <div className="form">
@@ -103,18 +119,19 @@ export default function Admin() {
           <label style={{ flex: 2 }}>Pertanyaan<input value={np.question} onChange={(e) => setNp({ ...np, question: e.target.value })} placeholder="Enakan bangun Free Meal dulu atau Tower Technology?" style={{ width: "100%" }} /></label>
           <label>Tutup di hari ke-<input type="number" min={lastDay + 1} value={np.closes_day} onChange={(e) => setNp({ ...np, closes_day: +e.target.value })} /></label>
           <label>Kuorum<input type="number" min={1} value={np.quorum} onChange={(e) => setNp({ ...np, quorum: +e.target.value })} /></label>
+          <label>Jenis<select value={np.kind} onChange={(e) => setNp({ ...np, kind: e.target.value })}><option value="building">Bangunan</option><option value="name">Nama negara</option></select></label>
         </div>
-        <table style={{ marginTop: 12 }}><thead><tr><th /><th>Pilihan</th><th>Nama bangunan jika menang</th><th>Model 3D</th><th>Biaya pajak</th></tr></thead><tbody>
+        <table style={{ marginTop: 12 }}><thead><tr><th /><th>{np.kind === "name" ? "Usulan nama" : "Pilihan"}</th>{np.kind === "building" && <><th>Nama bangunan jika menang</th><th>Model 3D</th><th>Biaya pajak</th></>}</tr></thead><tbody>
           {opts.map((o, i) => (
             <tr key={i}><td>{String.fromCharCode(65 + i)}</td>
               <td><input value={o.label} onChange={(e) => setOpts(opts.map((x, j) => j === i ? { ...x, label: e.target.value } : x))} /></td>
-              <td><input value={o.building_name} onChange={(e) => setOpts(opts.map((x, j) => j === i ? { ...x, building_name: e.target.value } : x))} /></td>
+              {np.kind === "building" && <><td><input value={o.building_name} onChange={(e) => setOpts(opts.map((x, j) => j === i ? { ...x, building_name: e.target.value } : x))} /></td>
               <td><select value={o.style} onChange={(e) => setOpts(opts.map((x, j) => j === i ? { ...x, style: +e.target.value } : x))}>{STYLES.map((s, k) => <option key={k} value={k}>{s}</option>)}</select></td>
-              <td><input type="number" min={0} value={o.pajak} onChange={(e) => setOpts(opts.map((x, j) => j === i ? { ...x, pajak: +e.target.value } : x))} /></td></tr>
+              <td><input type="number" min={0} value={o.pajak} onChange={(e) => setOpts(opts.map((x, j) => j === i ? { ...x, pajak: +e.target.value } : x))} /></td></>}</tr>
           ))}
         </tbody></table>
         <div className="form" style={{ marginTop: 10 }}>
-          {opts.length < 4 && <button className="ghost" onClick={() => setOpts([...opts, blankOpt()])}>+ Opsi</button>}
+          {opts.length < (np.kind === "name" ? 6 : 4) && <button className="ghost" onClick={() => setOpts([...opts, blankOpt()])}>+ Opsi</button>}
           <button onClick={createPoll}>Buat polling</button>
         </div>
         <p className="empty">Warga voting lewat komen (huruf pilihan atau nama). Hasil dihitung otomatis saat tutup, bangunan pemenang dibuat, dan laporan muncul di sini dan di video.</p>
@@ -122,7 +139,7 @@ export default function Admin() {
       <div className="card" style={{ marginTop: 10, overflowX: "auto" }}>
         {polls.length ? <table><thead><tr><th>Polling</th><th>Status</th><th>Suara</th><th /></tr></thead><tbody>
           {polls.map((p) => (
-            <tr key={p.id}><td>{p.title}<div className="empty">tutup hari ke-{p.closes_day ?? "?"}</div></td><td><span className="badge">{p.status}</span></td>
+            <tr key={p.id}><td>{p.title} {p.kind === "name" && <span className="badge">nama negara</span>}<div className="empty">tutup hari ke-{p.closes_day ?? "?"}</div></td><td><span className="badge">{p.status}</span></td>
               <td>{[...(p.ng_poll_options ?? [])].sort((a, b) => a.idx - b.idx).map((o) => `${o.label}: ${o.votes}`).join(" · ")}</td>
               <td>{p.status === "open" && <><button className="ghost" onClick={() => closeNext(p.id)}>Tutup di run berikutnya</button> <button className="ghost" onClick={() => cancelPoll(p.id)}>Batalkan</button></>}</td></tr>
           ))}

@@ -244,7 +244,11 @@ def poll_report(poll, options, counts, winner, building=None):
         lines.append(f"- {o['label']}: {n} suara ({pct}%){mark}")
     lines.append("")
     if winner is None:
-        lines.append(f"Kuorum {poll.get('quorum', 3)} suara belum tercapai ({total} suara). Polling tidak menghasilkan bangunan.")
+        lines.append(f"Kuorum {poll.get('quorum', 3)} suara belum tercapai ({total} suara). Polling tidak menghasilkan "
+                     f"{'nama baru' if poll.get('kind') == 'name' else 'bangunan'}.")
+    elif poll.get("kind") == "name":
+        opt = next(o for o in options if o["idx"] == winner)
+        lines.append(f"Hasil: '{opt['label']}' menang dari {total} suara. Mulai sekarang nama negara ini: {opt['label']}.")
     else:
         opt = next(o for o in options if o["idx"] == winner)
         lines.append(f"Hasil: {opt['label']} menang dari {total} suara. Bangunan: {building['name']} "

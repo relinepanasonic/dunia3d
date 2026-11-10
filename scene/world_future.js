@@ -61,7 +61,9 @@ export function makeWorldFuture(scene,{title='NEGARA'}={}){
   // ---- sign: holo board
   const S2=new THREE.Group();S2.name='sign';
   for(const s of[-1,1]){const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,2.6,6),poleM);p.position.set(s*1.4,1.3,0);S2.add(p);const l=new THREE.Mesh(new THREE.SphereGeometry(.14,8,6),basic(NEON));l.position.set(s*1.4,2.65,0);S2.add(l)}
-  const boardTex=canvasTex(512,256,(x,w,h)=>{x.fillStyle='rgba(6,30,56,.85)';x.fillRect(0,0,w,h);x.strokeStyle='#37e9ff';x.lineWidth=10;x.strokeRect(5,5,w-10,h-10);x.fillStyle='#d7ff3a';x.font='900 70px Orbitron, sans-serif';x.textAlign='center';x.fillText(title,w/2,125);x.fillStyle='#7ff2ff';x.font='700 34px Orbitron, sans-serif';x.fillText('KOTA DIGITAL',w/2,185)});
+  const drawBoard=(x,w,h,name)=>{x.clearRect(0,0,w,h);x.fillStyle='rgba(6,30,56,.85)';x.fillRect(0,0,w,h);x.strokeStyle='#37e9ff';x.lineWidth=10;x.strokeRect(5,5,w-10,h-10);x.fillStyle='#d7ff3a';x.font=`900 ${Math.min(70,Math.floor(470/Math.max(6,name.length)*1.6))}px Orbitron, sans-serif`;x.textAlign='center';x.fillText(name,w/2,125);x.fillStyle='#7ff2ff';x.font='700 34px Orbitron, sans-serif';x.fillText('KOTA DIGITAL',w/2,185)};
+  const boardTex=canvasTex(512,256,(x,w,h)=>drawBoard(x,w,h,title));
+  g.userData.setTitle=name=>{const c=boardTex.image;drawBoard(c.getContext('2d'),c.width,c.height,name);boardTex.needsUpdate=true};
   const board=new THREE.Mesh(new THREE.PlaneGeometry(2.9,1.45),new THREE.MeshBasicMaterial({map:boardTex,transparent:true,fog:false,side:THREE.DoubleSide}));board.position.set(0,1.95,.05);S2.add(board);
   S2.position.set(5.2,0,-3);S2.rotation.y=-.55;g.add(S2);
 

@@ -123,7 +123,7 @@ function PollCard({ p }: { p: Poll }) {
   const total = opts.reduce((s, o) => s + o.votes, 0);
   return (
     <div className="card" style={{ marginBottom: 10 }}>
-      <b style={{ fontSize: 18 }}>{p.title}</b> <span className={`badge ${p.status === "closed" ? "ok" : ""}`}>{p.status === "open" ? `tutup hari ke-${p.closes_day ?? "?"}` : "selesai"}</span>
+      <b style={{ fontSize: 18 }}>{p.title}</b> {p.kind === "name" && <span className="badge">nama negara</span>} <span className={`badge ${p.status === "closed" ? "ok" : ""}`}>{p.status === "open" ? `tutup hari ke-${p.closes_day ?? "?"}` : "selesai"}</span>
       <div className="empty" style={{ marginTop: 4 }}>{p.question}</div>
       {opts.map((o) => {
         const pct = total ? Math.round((o.votes / total) * 100) : 0;

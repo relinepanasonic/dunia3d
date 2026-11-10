@@ -69,6 +69,7 @@ function setTime(k){
 
 let TL=null,VO=null,curShot=null;
 window.loadProject=(tl,vo)=>{TL=tl;VO=vo;curShot=null;
+  if(world.userData.setTitle&&tl.series)world.userData.setTitle(String(tl.series).toUpperCase());
   if(world.userData.setBuildings){world.userData.setBuildings(tl.styles&&tl.styles.length?tl.styles:[0,1,2,3,4,5,6,7]);houses=[...Array(16).keys()].map(i=>scene.getObjectByName('house'+i)).filter(Boolean)}
   for(const id of['badge','hook'])document.getElementById(id).textContent='DAY '+tl.day};
 let houses=[];const fire=scene.getObjectByName('campfire');

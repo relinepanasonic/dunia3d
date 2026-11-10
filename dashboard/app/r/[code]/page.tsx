@@ -18,5 +18,5 @@ export default function Referral() {
       router.replace(`/play?ref=${encodeURIComponent(code)}`);
     })();
   }, [code, router]);
-  return <div className="wrap"><p className="empty">Membuka Negara Gue…</p></div>;
+  return <div className="wrap"><p className="empty">Membuka negara…</p></div>;
 }

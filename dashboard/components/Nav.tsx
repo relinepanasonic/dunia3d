@@ -12,7 +12,7 @@ const TABS = [
   { href: "/admin", label: "Admin", icon: I("M12 3l8 3v6c0 4.5-3.2 8-8 9-4.8-1-8-4.5-8-9V6l8-3z") },
 ];
 
-export default function Nav() {
+export default function Nav({ brand }: { brand: string }) {
   const path = usePathname();
   const [time, setTime] = useState("");
   const [user, setUser] = useState<string | null>(null);
@@ -31,7 +31,7 @@ export default function Nav() {
   return (
     <nav className="nav">
       <div className="nav-in">
-        <Link href="/" className="brand"><i /> Negara Gue</Link>
+        <Link href="/" className="brand"><i /> {brand}</Link>
         {TABS.map((t) => <Link key={t.href} href={t.href} className={`tab${on(t.href) ? " on" : ""}`}>{t.icon}<span>{t.label}</span></Link>)}
         <div className="sp" />
         <span className="clock">{time}</span>
