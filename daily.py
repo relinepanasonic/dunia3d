@@ -84,9 +84,13 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
                             f"Penonton voting dengan komen huruf/nama pilihan. Ditutup hari ke-{poll.get('closes_day')}.")
 
     # ---- 4. citizens: coins and influence (only what platforms expose)
+    if sb.configured():  # citizens who comment their NG-code link their web account to that handle
+        from sync import claims
+        for acct, cm in claims.find_claims(comments):
+            claims.apply_claim(acct, cm)
     prev_tot = bible.get("totals", {})
     pool = game.dividend_pool(max(0, totals["likes"] - prev_tot.get("likes", 0)), max(0, totals["shares"] - prev_tot.get("shares", 0)))
-    existing = {(c["platform"], c["handle"]): c for c in sb.get("ng_citizens?select=platform,handle,level,spent")} if sb.configured() else {}
+    existing = {(c["platform"], c["handle"]): c for c in sb.get("ng_citizens?select=platform,handle,level,spent,owner")} if sb.configured() else {}
     keys = set(existing) | {(c.get("platform", "instagram"), c["user"]) for c in comments} \
         | {(m.get("platform", "instagram"), m["handle"]) for m in mentions} | {(v["platform"], v["handle"]) for v in new_votes}
     divs = game.dividends(pool, {k: existing.get(k, {}).get("level", 1) for k in keys})
@@ -97,6 +101,9 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
     upgrades = []
     for c in citizens:  # free pod for everyone; upgrade automatically when affordable (until citizens can spend in the web app)
         ex = existing.get((c["platform"], c["handle"]), {})
+        if ex.get("owner"):  # account owners upgrade themselves in the web app
+            c["level"], c["spent"] = ex.get("level", 1), ex.get("spent", 0)
+            continue
         lvl, spent = game.upgrade(c["coins"], ex.get("spent", 0), ex.get("level", 1))
         if lvl > ex.get("level", 1):
             upgrades.append(f"@{c['handle']} -> level {lvl}")

@@ -38,6 +38,7 @@ export default async function Home() {
     <div className="wrap">
       <div className="top">
         <div><h1>NEGARA GUE</h1><div className="empty">Hari ke-{latest?.day ?? 0} · status negara live</div></div>
+        <Link href="/play" className="tier" style={{ textDecoration: "none", borderColor: "var(--mag)", color: "var(--mag)" }}>🏠 Jadi Warga</Link>
         <Link href="/world" className="tier" style={{ textDecoration: "none", borderColor: "var(--lime)", color: "var(--lime)" }}>🌐 Lihat Dunia</Link>
         <div className="tier">{latest?.tier ?? "Dusun Digital"}{tn && latest ? ` → ${tn.name} (${fmt(tn.min - latest.penduduk)} lagi)` : ""}</div>
       </div>
