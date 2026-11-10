@@ -38,3 +38,19 @@ export function requirements(b: Building, s: Snapshot | null) {
     .map((k) => ({ key: k, have: cur[k], need: b[k], pct: Math.min(100, Math.round((cur[k] / b[k]) * 100)) }));
   return { rows, ready: rows.every((r) => r.have >= r.need) };
 }
+
+export const HOUSES = [
+  { level: 1, name: "Pod Kecil", cost: 0 },
+  { level: 2, name: "Pod Solar", cost: 50 },
+  { level: 3, name: "Pod Taman", cost: 150 },
+  { level: 4, name: "Vila Apung", cost: 400 },
+  { level: 5, name: "Mansion Oktagon", cost: 1000 },
+];
+export type WorldCitizen = Citizen & { level?: number; spent?: number };
+/** Level stored by the daily job; before that, derive it from coins (every citizen owns at least a free pod). */
+export function levelOf(c: WorldCitizen) {
+  if (c.level) return c.level;
+  let lvl = 1, left = c.coins;
+  for (const h of HOUSES.slice(1)) { if (left >= h.cost) { left -= h.cost; lvl = h.level; } else break; }
+  return lvl;
+}

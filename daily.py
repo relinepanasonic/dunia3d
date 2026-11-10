@@ -84,16 +84,33 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
                             f"Penonton voting dengan komen huruf/nama pilihan. Ditutup hari ke-{poll.get('closes_day')}.")
 
     # ---- 4. citizens: coins and influence (only what platforms expose)
-    act = game.activity_rows(day, comments, mentions, new_votes)
+    prev_tot = bible.get("totals", {})
+    pool = game.dividend_pool(max(0, totals["likes"] - prev_tot.get("likes", 0)), max(0, totals["shares"] - prev_tot.get("shares", 0)))
+    existing = {(c["platform"], c["handle"]): c for c in sb.get("ng_citizens?select=platform,handle,level,spent")} if sb.configured() else {}
+    keys = set(existing) | {(c.get("platform", "instagram"), c["user"]) for c in comments} \
+        | {(m.get("platform", "instagram"), m["handle"]) for m in mentions} | {(v["platform"], v["handle"]) for v in new_votes}
+    divs = game.dividends(pool, {k: existing.get(k, {}).get("level", 1) for k in keys})
+    act = game.activity_rows(day, comments, mentions, new_votes, divs)
     sb.upsert("ng_activity", act, "day,platform,handle")
     all_act = sb.get("ng_activity?select=*&limit=100000") if sb.configured() else act
     citizens = game.citizen_scores(all_act)
+    upgrades = []
+    for c in citizens:  # free pod for everyone; upgrade automatically when affordable (until citizens can spend in the web app)
+        ex = existing.get((c["platform"], c["handle"]), {})
+        lvl, spent = game.upgrade(c["coins"], ex.get("spent", 0), ex.get("level", 1))
+        if lvl > ex.get("level", 1):
+            upgrades.append(f"@{c['handle']} -> level {lvl}")
+        c["level"], c["spent"] = lvl, spent
+    new_pods = sorted(k[1] for k in keys if k not in existing)
+    economy = (f"EKONOMI: dividen pajak hari ini {int(pool)} koin dibagi ke {len(keys)} warga; "
+               f"{len(new_pods)} rumah pod gratis baru; upgrade rumah: {', '.join(upgrades) if upgrades else 'belum ada'}.")
 
     # ---- 5/6. script, voice, render (pipeline stages)
     extra = []
     if poll_reports:
         extra.append("HASIL POLLING (hitungan sistem, wajib akurat):\n" + "\n\n".join(poll_reports))
     extra += announce
+    extra.append(economy + " (Setiap warga dapat rumah pod gratis; like+share menjadi dividen untuk semua warga; rumah bisa di-upgrade dengan koin.)")
     if citizens:
         extra.append("WARGA TERPENGARUH: " + ", ".join(f"@{c['handle']} (pengaruh {c['pengaruh']}, koin {c['coins']})" for c in citizens[:3]))
     write_json(d / "context.json", {"poll_target": poll_target, "extra_facts": "\n".join(extra)})
@@ -104,7 +121,7 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
 
     # ---- 7. dashboard data
     plan, after, ep = read_json(d / "game_plan.json"), read_json(d / "bible.after.json"), read_json(d / "episode.json")
-    report = game.daily_report(day, plan, poll_reports, citizens)
+    report = game.daily_report(day, plan, poll_reports, citizens, economy)
     write_json(d / "report.json", {"daily": report, "polls": poll_reports})
     if sb.configured() and not dry:
         s, t = plan["state"], after["totals"]

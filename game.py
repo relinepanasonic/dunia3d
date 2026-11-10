@@ -89,18 +89,20 @@ def poll_building(poll, option, bible):
 
 
 # ---------------------------------------------------------------- citizens
-def activity_rows(day, comments, mentions, votes):
+def activity_rows(day, comments, mentions, votes, dividends=None):
     """Per-person activity for one day. comments: [{platform,user,likes}], mentions: [{platform,handle}]."""
     rows = {}
     def row(p, h):
         return rows.setdefault((p, h), {"day": day, "platform": p, "handle": h, "comments": 0,
-                                        "comment_likes": 0, "mentions": 0, "votes": 0})
+                                        "comment_likes": 0, "mentions": 0, "votes": 0, "dividend": 0})
     for c in comments:
         r = row(c.get("platform", "instagram"), c["user"]); r["comments"] += 1; r["comment_likes"] += c.get("likes", 0)
     for m in mentions:
         row(m.get("platform", "instagram"), m["handle"])["mentions"] += 1
     for v in votes:
         row(v["platform"], v["handle"])["votes"] += 1
+    for (p, h), amount in (dividends or {}).items():
+        row(p, h)["dividend"] = amount
     return list(rows.values())
 
 
@@ -110,15 +112,42 @@ def citizen_scores(all_activity, g=None):
     for a in all_activity:
         p = people.setdefault((a["platform"], a["handle"]), {
             "platform": a["platform"], "handle": a["handle"], "comments": 0, "comment_likes": 0, "mentions": 0,
-            "votes": 0, "first_day": a["day"], "last_day": a["day"]})
+            "votes": 0, "dividend": 0, "first_day": a["day"], "last_day": a["day"]})
         for k in ("comments", "comment_likes", "mentions", "votes"):
             p[k] += a[k]
+        p["dividend"] += a.get("dividend", 0)
         p["first_day"], p["last_day"] = min(p["first_day"], a["day"]), max(p["last_day"], a["day"])
     for p in people.values():
         p["coins"] = (p["comments"] * c["coin_per_comment"] + p["comment_likes"] * c["coin_per_comment_like"]
-                      + p["votes"] * c["coin_per_vote"])
+                      + p["votes"] * c["coin_per_vote"] + p["dividend"])
+        del p["dividend"]  # already folded into coins (the per-day amounts live in ng_activity)
         p["pengaruh"] = p["mentions"] * c["pengaruh_per_mention"] + p["comment_likes"] // c["comment_likes_per_pengaruh"]
     return sorted(people.values(), key=lambda p: -p["pengaruh"])
+
+
+# ---------------------------------------------------------------- economy: dividends + house upgrades
+def dividend_pool(delta_likes, delta_shares, g=None):
+    d = (g or rules())["economy"]["dividend"]
+    return delta_likes * d["per_like"] + delta_shares * d["per_share"]
+
+
+def dividends(pool, levels, g=None):
+    """Split the pool over every citizen; weight = 1 + bonus*(level-1). levels: {(platform, handle): level}."""
+    d = (g or rules())["economy"]["dividend"]
+    if not levels:
+        return {}
+    w = {k: 1 + d["level_bonus"] * (lvl - 1) for k, lvl in levels.items()}
+    tot = sum(w.values())
+    return {k: int(pool * v / tot) for k, v in w.items()}
+
+
+def upgrade(coins, spent, level, g=None):
+    """Spend coins on the next house levels while affordable. Returns (level, spent)."""
+    houses = (g or rules())["houses"]
+    while level < len(houses) and coins - spent >= houses[level]["cost"]:
+        spent += houses[level]["cost"]
+        level += 1
+    return level, spent
 
 
 # ---------------------------------------------------------------- episode plan
@@ -223,7 +252,7 @@ def poll_report(poll, options, counts, winner, building=None):
     return "\n".join(lines)
 
 
-def daily_report(day, p, polls_closed, top_citizens):
+def daily_report(day, p, polls_closed, top_citizens, economy=None):
     s, d = p["state"], p["delta"]
     lines = [f"LAPORAN NEGARA HARI KE-{day}", f"Tier: {p['tier']}  |  Skor Negara: {p['score']}", "",
              f"Penduduk {s['penduduk']} (+{d['followers']}), Kas pajak {s['pajak']} (+{d['likes']} like), "
@@ -234,6 +263,8 @@ def daily_report(day, p, polls_closed, top_citizens):
         lines.append(f"Target: {p['target']['name']} - belum cukup, kurang {p['shortfall']}.")
     for r in polls_closed:
         lines += ["", r]
+    if economy:
+        lines += ["", economy]
     if top_citizens:
         lines += ["", "Warga berpengaruh: " + ", ".join(f"@{c['handle']} ({c['pengaruh']})" for c in top_citizens[:3])]
     return "\n".join(lines)

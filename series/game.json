@@ -1,17 +1,48 @@
 {
   "_doc": "Gamification rules. IG/TikTok/YouTube KPIs are summed into one country state. Edit numbers freely; dashboard and script generator both read this.",
   "platforms": {
-    "instagram": {"weight": 1.0},
-    "youtube":   {"weight": 1.0},
-    "tiktok":    {"weight": 1.0}
+    "instagram": {
+      "weight": 1.0
+    },
+    "youtube": {
+      "weight": 1.0
+    },
+    "tiktok": {
+      "weight": 1.0
+    }
   },
   "kpis": {
-    "penduduk":  {"ig": "followers", "label": "Penduduk",  "per": 1, "desc": "Follower (semua platform) = penduduk negara"},
-    "pajak":     {"ig": "likes",     "label": "Pajak",     "per": 1, "desc": "Like (semua platform) = bayar pajak (kas negara)"},
-    "pengaruh":  {"ig": "shares",    "label": "Pengaruh",  "per": 1, "desc": "Share (semua platform) = pengaruh negara di dunia"},
-    "inspirasi": {"ig": "comments",  "label": "Inspirasi", "per": 1, "desc": "Komen (semua platform) = inspirasi ide pembangunan"}
+    "penduduk": {
+      "ig": "followers",
+      "label": "Penduduk",
+      "per": 1,
+      "desc": "Follower (semua platform) = penduduk negara"
+    },
+    "pajak": {
+      "ig": "likes",
+      "label": "Pajak",
+      "per": 1,
+      "desc": "Like (semua platform) = bayar pajak (kas negara)"
+    },
+    "pengaruh": {
+      "ig": "shares",
+      "label": "Pengaruh",
+      "per": 1,
+      "desc": "Share (semua platform) = pengaruh negara di dunia"
+    },
+    "inspirasi": {
+      "ig": "comments",
+      "label": "Inspirasi",
+      "per": 1,
+      "desc": "Komen (semua platform) = inspirasi ide pembangunan"
+    }
   },
-  "score_weights": {"penduduk": 1, "pajak": 0.2, "pengaruh": 3, "inspirasi": 2},
+  "score_weights": {
+    "penduduk": 1,
+    "pajak": 0.2,
+    "pengaruh": 3,
+    "inspirasi": 2
+  },
   "citizen": {
     "coin_per_comment": 1,
     "coin_per_comment_like": 2,
@@ -20,24 +51,147 @@
     "comment_likes_per_pengaruh": 5
   },
   "tiers": [
-    {"id": "dusun",      "name": "Dusun Digital",   "min_penduduk": 0},
-    {"id": "kota",       "name": "Kota Neon",       "min_penduduk": 100},
-    {"id": "metro",      "name": "Metropolis",      "min_penduduk": 1000},
-    {"id": "megapolis",  "name": "Megapolis Dunia", "min_penduduk": 10000}
+    {
+      "id": "dusun",
+      "name": "Dusun Digital",
+      "min_penduduk": 0
+    },
+    {
+      "id": "kota",
+      "name": "Kota Neon",
+      "min_penduduk": 100
+    },
+    {
+      "id": "metro",
+      "name": "Metropolis",
+      "min_penduduk": 1000
+    },
+    {
+      "id": "megapolis",
+      "name": "Megapolis Dunia",
+      "min_penduduk": 10000
+    }
   ],
   "buildings": [
-    {"id": "kedai_nutrisi",  "name": "Kedai Nutrisi",    "pajak": 40,   "inspirasi": 3,  "penduduk": 20,  "pengaruh": 0,   "slot": 0, "style": 0},
-    {"id": "menara_energi",  "name": "Menara Energi",    "pajak": 120,  "inspirasi": 6,  "penduduk": 60,  "pengaruh": 0,   "slot": 1, "style": 1},
-    {"id": "stasiun_maglev", "name": "Stasiun Maglev",   "pajak": 250,  "inspirasi": 10, "penduduk": 150, "pengaruh": 10,  "slot": 2, "style": 2},
-    {"id": "klinik_hologram","name": "Klinik Hologram",  "pajak": 400,  "inspirasi": 15, "penduduk": 300, "pengaruh": 15,  "slot": 3, "style": 3},
-    {"id": "kampus_ai",      "name": "Kampus AI",        "pajak": 700,  "inspirasi": 20, "penduduk": 500, "pengaruh": 30,  "slot": 4, "style": 4},
-    {"id": "kedutaan",       "name": "Kedutaan Dunia",   "pajak": 900,  "inspirasi": 25, "penduduk": 800, "pengaruh": 100, "slot": 5, "style": 5},
-    {"id": "stadion_hover",  "name": "Stadion Hover",    "pajak": 1500, "inspirasi": 35, "penduduk": 1200,"pengaruh": 150, "slot": 6, "style": 6},
-    {"id": "pelabuhan_orbit","name": "Pelabuhan Orbit",  "pajak": 3000, "inspirasi": 50, "penduduk": 3000,"pengaruh": 300, "slot": 7, "style": 7}
+    {
+      "id": "kedai_nutrisi",
+      "name": "Kedai Nutrisi",
+      "pajak": 40,
+      "inspirasi": 3,
+      "penduduk": 20,
+      "pengaruh": 0,
+      "slot": 0,
+      "style": 0
+    },
+    {
+      "id": "menara_energi",
+      "name": "Menara Energi",
+      "pajak": 120,
+      "inspirasi": 6,
+      "penduduk": 60,
+      "pengaruh": 0,
+      "slot": 1,
+      "style": 1
+    },
+    {
+      "id": "stasiun_maglev",
+      "name": "Stasiun Maglev",
+      "pajak": 250,
+      "inspirasi": 10,
+      "penduduk": 150,
+      "pengaruh": 10,
+      "slot": 2,
+      "style": 2
+    },
+    {
+      "id": "klinik_hologram",
+      "name": "Klinik Hologram",
+      "pajak": 400,
+      "inspirasi": 15,
+      "penduduk": 300,
+      "pengaruh": 15,
+      "slot": 3,
+      "style": 3
+    },
+    {
+      "id": "kampus_ai",
+      "name": "Kampus AI",
+      "pajak": 700,
+      "inspirasi": 20,
+      "penduduk": 500,
+      "pengaruh": 30,
+      "slot": 4,
+      "style": 4
+    },
+    {
+      "id": "kedutaan",
+      "name": "Kedutaan Dunia",
+      "pajak": 900,
+      "inspirasi": 25,
+      "penduduk": 800,
+      "pengaruh": 100,
+      "slot": 5,
+      "style": 5
+    },
+    {
+      "id": "stadion_hover",
+      "name": "Stadion Hover",
+      "pajak": 1500,
+      "inspirasi": 35,
+      "penduduk": 1200,
+      "pengaruh": 150,
+      "slot": 6,
+      "style": 6
+    },
+    {
+      "id": "pelabuhan_orbit",
+      "name": "Pelabuhan Orbit",
+      "pajak": 3000,
+      "inspirasi": 50,
+      "penduduk": 3000,
+      "pengaruh": 300,
+      "slot": 7,
+      "style": 7
+    }
   ],
   "_rules": [
     "Bangunan dibangun jika SEMUA syarat terpenuhi: kas pajak >= pajak, komen episode ini >= inspirasi, penduduk >= penduduk, pengaruh >= pengaruh.",
     "Poll/event dari dashboard: pemenang (suara terbanyak lewat komen, min. kuorum) jadi bangunan prioritas; biayanya mengikuti opsi poll.",
     "Koin warga hanya dari aksi yang terlihat di platform: komen, like pada komen mereka, dan suara poll. Pengaruh warga dari mention/tag akun dan like pada komen mereka."
+  ],
+  "economy": {
+    "_doc": "Per-person likes/shares are NOT available from Instagram. So likes and shares fund a daily DIVIDEND shared by all citizens (higher house level = bigger share). Comments are intentionally cheap (inspiration, not income).",
+    "dividend": {
+      "per_like": 0.3,
+      "per_share": 2.0,
+      "level_bonus": 0.15
+    }
+  },
+  "houses": [
+    {
+      "level": 1,
+      "name": "Pod Kecil",
+      "cost": 0
+    },
+    {
+      "level": 2,
+      "name": "Pod Solar",
+      "cost": 50
+    },
+    {
+      "level": 3,
+      "name": "Pod Taman",
+      "cost": 150
+    },
+    {
+      "level": 4,
+      "name": "Vila Apung",
+      "cost": 400
+    },
+    {
+      "level": 5,
+      "name": "Mansion Oktagon",
+      "cost": 1000
+    }
   ]
 }

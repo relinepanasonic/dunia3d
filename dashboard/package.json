@@ -1,12 +1,22 @@
 {
   "name": "negara-gue-dashboard",
   "private": true,
-  "scripts": { "dev": "next dev -p 3100", "build": "next build", "start": "next start" },
+  "scripts": {
+    "dev": "next dev -p 3100",
+    "build": "next build",
+    "start": "next start"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "three": "^0.170.0"
   },
-  "devDependencies": { "@types/node": "^22.0.0", "@types/react": "^19.0.0", "typescript": "^5.6.0" }
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/three": "^0.170.0",
+    "typescript": "^5.6.0"
+  }
 }
