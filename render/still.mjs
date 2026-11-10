@@ -1,0 +1,10 @@
+import {createServer} from 'vite';
+import {chromium} from 'playwright';
+const q=process.argv[2]||'';const out=process.argv[3]||'out/m1-still.png';
+const srv=await createServer({root:'scene',server:{port:5199},logLevel:'error'});await srv.listen();
+const b=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--ignore-gpu-blocklist']});
+const pg=await b.newPage({viewport:{width:1080,height:1920}});
+pg.on('console',m=>console.log('[page]',m.text()));pg.on('pageerror',e=>console.log('[err]',e.message));
+await pg.goto('http://localhost:5199/?'+q);await pg.waitForFunction('window.__ready===true',null,{timeout:60000});
+await pg.locator('#stage').screenshot({path:out});
+await b.close();await srv.close();console.log('saved',out);

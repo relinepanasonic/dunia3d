@@ -1,0 +1,383 @@
+{
+ "title": "Day 2: Kedai Nutrisi Pertama",
+ "hook": "Day dua. Kemarin gue sendirian.",
+ "shots": [
+  {
+   "camera": "wide_push",
+   "character_anim": "idle",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Day dua. Kemarin gue sendirian.",
+   "caption_words": [
+    "Day dua.",
+    "Kemarin gue",
+    "sendirian."
+   ],
+   "highlight_word": "sendirian",
+   "overlay": {
+    "type": "hook"
+   }
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "nod",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Penduduk gue naik jadi tiga puluh delapan.",
+   "caption_words": [
+    "Penduduk gue",
+    "naik jadi",
+    "tiga puluh",
+    "delapan."
+   ],
+   "highlight_word": "delapan",
+   "overlay": {
+    "type": "kpi",
+    "followers": 38,
+    "pajak": 260,
+    "pengaruh": 14,
+    "inspirasi": 12,
+    "goal": "Kedai Nutrisi",
+    "progress": 100
+   }
+  },
+  {
+   "camera": "close_push",
+   "character_anim": "shrug",
+   "expression": "annoyed",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Dari like kalian, kas pajak udah dua ratus enam puluh.",
+   "caption_words": [
+    "Dari like kalian,",
+    "kas pajak udah",
+    "dua ratus",
+    "enam puluh."
+   ],
+   "highlight_word": "pajak"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "point",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Aturannya masih sama. Lo follow, lo rakyat.",
+   "caption_words": [
+    "Aturannya masih sama.",
+    "Lo follow,",
+    "lo rakyat."
+   ],
+   "highlight_word": "rakyat",
+   "overlay": {
+    "type": "card",
+    "rows": [
+     {
+      "label": "LO FOLLOW",
+      "text": "= jadi RAKYAT"
+     },
+     {
+      "label": "KOMEN TERATAS",
+      "text": "= gue BANGUN"
+     }
+    ]
+   }
+  },
+  {
+   "camera": "medium_pull",
+   "character_anim": "wave",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Dan komen teratas hari ini...",
+   "caption_words": [
+    "Dan komen teratas",
+    "hari ini..."
+   ],
+   "highlight_word": "teratas",
+   "overlay": {
+    "type": "comment",
+    "user": "budi.santoso",
+    "text": "bangun warung dulu dong"
+   }
+  },
+  {
+   "camera": "close_push",
+   "character_anim": "nod",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Kedai. Bangunan pertama negara gue.",
+   "caption_words": [
+    "Kedai.",
+    "Bangunan pertama",
+    "negara gue."
+   ],
+   "highlight_word": "Kedai"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "point",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Sidang rakyat dimulai. Palu diketok.",
+   "caption_words": [
+    "Sidang rakyat",
+    "dimulai.",
+    "Palu diketok."
+   ],
+   "highlight_word": "diketok",
+   "overlay": {
+    "type": "live",
+    "text": "SIDANG RAKYAT #2"
+   }
+  },
+  {
+   "camera": "drone",
+   "character_anim": "walk",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 0,
+    "campfire": false
+   },
+   "duration_sec": 4.5,
+   "voiceover_text": "Gue cari tanah yang paling strategis.",
+   "caption_words": [
+    "Gue cari tanah",
+    "yang paling",
+    "strategis."
+   ],
+   "highlight_word": "strategis",
+   "overlay": {
+    "type": "drone"
+   }
+  },
+  {
+   "camera": "wide_push",
+   "character_anim": "idle",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Dan jadi! Kedai rakyat pertama.",
+   "caption_words": [
+    "Dan jadi!",
+    "Kedai rakyat",
+    "pertama."
+   ],
+   "highlight_word": "pertama"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "point",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Share kalian naikin pengaruh negara gue.",
+   "caption_words": [
+    "Share kalian",
+    "naikin pengaruh",
+    "negara gue."
+   ],
+   "highlight_word": "pengaruh"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "shrug",
+   "expression": "annoyed",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Pemiliknya Pak Budi. Rakyat nomor dua.",
+   "caption_words": [
+    "Pemiliknya Pak Budi.",
+    "Rakyat",
+    "nomor dua."
+   ],
+   "highlight_word": "Budi",
+   "overlay": {
+    "type": "idcard",
+    "sub": "REPUBLIK NEGARA GUE",
+    "nik": "0002",
+    "name": "Budi Santoso",
+    "status": "sudah follow"
+   }
+  },
+  {
+   "camera": "orbit",
+   "character_anim": "idle",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false,
+    "time_to": "dusk"
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Sore tiba, warung langsung rame.",
+   "caption_words": [
+    "Sore tiba,",
+    "warung langsung",
+    "rame."
+   ],
+   "highlight_word": "rame"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "nod",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "dusk",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": true,
+    "time_to": "night"
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Rakyat nongkrong sampai malam.",
+   "caption_words": [
+    "Rakyat nongkrong",
+    "sampai malam."
+   ],
+   "highlight_word": "nongkrong"
+  },
+  {
+   "camera": "close_push",
+   "character_anim": "sleep",
+   "expression": "sleep",
+   "scene_state": {
+    "time": "night",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": true
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Gue capek. Tidur dulu ya.",
+   "caption_words": [
+    "Gue capek.",
+    "Tidur",
+    "dulu ya."
+   ],
+   "highlight_word": "Tidur",
+   "overlay": {
+    "type": "follow",
+    "text": "+ FOLLOW BIAR JADI RAKYAT"
+   }
+  },
+  {
+   "camera": "medium_pull",
+   "character_anim": "wave",
+   "expression": "smile",
+   "scene_state": {
+    "time": "night",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": true
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Besok Day tiga. Komen apa yang mau dibangun?",
+   "caption_words": [
+    "Besok Day tiga.",
+    "Komen apa yang",
+    "mau dibangun?"
+   ],
+   "highlight_word": "dibangun",
+   "overlay": {
+    "type": "end",
+    "big": "DAY 3",
+    "sub": "bangunan kedua = komen teratas"
+   }
+  }
+ ],
+ "ig_caption": "Day 2: komen teratas kalian resmi jadi bangunan pertama! Follow biar jadi rakyat, komen biar gue bangunin.",
+ "hashtags": [
+  "#negarague",
+  "#bikinnegara",
+  "#animasi3d",
+  "#fyp",
+  "#reels"
+ ],
+ "bible_update": {
+  "population": 38,
+  "followers": 37,
+  "buildings": [
+   "Warung Pak Budi"
+  ],
+  "running_gags": [
+   "Lo follow = jadi rakyat",
+   "Komen teratas = gue bangun",
+   "Pak Budi pemilik warung, rakyat nomor dua"
+  ],
+  "story_so_far": "Day 1: mulai dari lahan kosong. Day 2: 37 follower jadi rakyat, warung Pak Budi jadi bangunan pertama.",
+  "next_episode_teaser": "Day 3: bangunan kedua dari komen teratas."
+ }
+}

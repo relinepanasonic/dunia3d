@@ -1,0 +1,27 @@
+{
+  "series": "Negara Gue",
+  "day": 1,
+  "voice": "id-ID-ArdiNeural",
+  "rate": "+8%",
+  "shots": [
+    {"id":"s1","min_dur":2.6,"camera":"wide_push","anim":"idle","expression":"smile",
+     "state":{"time":0,"sign":false,"chair":false},
+     "voiceover_text":"Bikin negara dari nol.","highlight":"negara","overlay":{"type":"hook"}},
+    {"id":"s2","min_dur":3.0,"camera":"medium_push","anim":"point","expression":"smirk",
+     "state":{"time":0,"sign":true,"chair":false},
+     "voiceover_text":"Yang milih? Ya lo semua.","highlight":"lo",
+     "overlay":{"type":"card","rows":[{"label":"LO FOLLOW","text":"= jadi RAKYAT"},{"label":"KOMEN TERATAS","text":"= gue BANGUN"}]}},
+    {"id":"s3","min_dur":3.0,"camera":"close_push","anim":"shrug","expression":"annoyed",
+     "state":{"time":0,"sign":true,"chair":false},
+     "voiceover_text":"Penduduk gue sekarang? Satu doang.","highlight":"Satu",
+     "overlay":{"type":"census","followers":0,"pop":1}},
+    {"id":"s4","min_dur":3.0,"camera":"drone","anim":"walk","expression":"smile",
+     "state":{"time":0,"sign":true,"chair":true},
+     "voiceover_text":"Tanahnya luas banget.","highlight":"luas",
+     "overlay":{"type":"drone"}},
+    {"id":"s5","min_dur":3.0,"camera":"medium_pull","anim":"wave","expression":"smile",
+     "state":{"time":0,"time_to":1,"sign":true,"chair":true},
+     "voiceover_text":"Besok Day dua. Follow dulu!","highlight":"Follow",
+     "overlay":{"type":"end","big":"DAY 2","sub":"bangunan pertama = komen teratas"}}
+  ]
+}

@@ -1,0 +1,12 @@
+.env
+.env.local
+.env*.local
+node_modules/
+out/
+frames/
+reference/
+__pycache__/
+*.pyc
+*.mp4
+.next/
+.vercel/

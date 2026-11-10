@@ -1,0 +1,28 @@
+{
+  "series_name": "Negara Gue",
+  "language": "id",
+  "voice": "id-ID-ArdiNeural",
+  "voice_rate": "+10%",
+  "voice_provider": "edge",
+  "daily_post_cap": 1,
+  "target_seconds": [
+    55,
+    95
+  ],
+  "base_hashtags": [
+    "#negarague",
+    "#animasi3d",
+    "#lowpoly",
+    "#fyp",
+    "#reels"
+  ],
+  "character": "Presiden manusia (cowok) berkepala bulat besar, jas futuristik putih-perak dengan garis neon cyan, dasi kupu-kupu neon, earpiece holografik. Santai, sok pede, ngomong 'gue/lo'. Negara: kota sci-fi neon.",
+  "theme": "future",
+  "start_date": "2026-11-09",
+  "require_approval": true,
+  "platforms": [
+    "instagram",
+    "youtube",
+    "tiktok"
+  ]
+}

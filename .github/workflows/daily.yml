@@ -1,0 +1,44 @@
+name: daily-episode
+on:
+  schedule:
+    - cron: "1 17 * * *"      # 00:01 Asia/Jakarta (UTC+7). GitHub cron can start a few minutes late.
+  workflow_dispatch:
+    inputs:
+      day: { description: "Force a day number (optional)", required: false }
+      dry_run: { description: "No dashboard writes / uploads", type: boolean, default: false }
+concurrency: { group: daily-episode, cancel-in-progress: false }
+jobs:
+  episode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm ci && npx playwright install --with-deps chromium
+      - run: pip install edge-tts pydantic
+      - name: Run the daily loop
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          IG_USER_ID: ${{ secrets.IG_USER_ID }}
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          TT_CLIENT_KEY: ${{ secrets.TT_CLIENT_KEY }}
+          TT_CLIENT_SECRET: ${{ secrets.TT_CLIENT_SECRET }}
+          TT_REFRESH_TOKEN: ${{ secrets.TT_REFRESH_TOKEN }}
+        run: |
+          ARGS=""
+          if [ -n "${{ github.event.inputs.day }}" ]; then ARGS="$ARGS --day ${{ github.event.inputs.day }}"; fi
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
+          python daily.py $ARGS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: episode, path: "out/day-*/", retention-days: 14 }
