@@ -200,22 +200,22 @@ export default function World() {
 
   const MODES: [Mode, string][] = [["auto", `⏱ Auto ${hhmm(clock)} WIB`], ["pagi", "🌅 Pagi"], ["siang", "☀ Siang"], ["sore", "🌇 Sore"], ["malam", "🌙 Malam"]];
   return (
-    <div style={{ position: "relative", height: "100vh", width: "100%" }}>
+    <div style={{ position: "relative", height: "calc(100vh - 57px)", width: "100%" }}>
       <div ref={mount} style={{ position: "absolute", inset: 0 }} />
-      <div style={{ position: "absolute", left: 12, top: 12, right: 12, display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center", pointerEvents: "none" }}>
-        <Link href="/" style={{ pointerEvents: "auto" }} className="tier">← Dashboard</Link>
-        <span className="tier">Dunia Negara Gue · Hari ke-{snap.day}</span>
-        {MODES.map(([k, label]) => <button key={k} style={{ pointerEvents: "auto", opacity: mode === k ? 1 : 0.75, outline: mode === k ? "2px solid var(--lime)" : "none" }} className="ghost" onClick={() => setMode(k)}>{label}</button>)}
+      <div style={{ position: "absolute", left: 16, top: 14, right: 16, display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", pointerEvents: "none" }}>
+        <div className="seg" style={{ pointerEvents: "auto", backdropFilter: "blur(10px)", background: "rgba(18,22,28,.6)" }}>
+          {MODES.map(([k, label]) => <button key={k} className={mode === k ? "on" : ""} onClick={() => setMode(k)}>{label}</button>)}
+        </div>
         <button style={{ pointerEvents: "auto" }} className="ghost" onClick={() => { setSpin(!spin); api.current?.setSpin(!spin); }}>{spin ? "⏸ Putar" : "▶ Putar"}</button>
       </div>
-      <div className="card" style={{ position: "absolute", left: 12, bottom: 12, maxWidth: 330, fontSize: 13 }}>
+      <div className="card" style={{ position: "absolute", left: 16, bottom: 16, maxWidth: 330, fontSize: 13, background: "rgba(18,22,28,.78)", backdropFilter: "blur(12px)" }}>
         <b>{citizens.length} warga · {buildings.length} bangunan · {snap.penduduk} penduduk</b>
         <div className="empty">Setiap warga dapat rumah pod gratis di daratan hijau. Upgrade dengan koin.</div>
         {HOUSES.map((h, i) => <div key={h.level} className="row" style={{ margin: "4px 0" }}><span>L{h.level} {h.name}{h.cost ? ` · ${h.cost} koin` : " · gratis"}</span><span>{counts[i] ?? 0}</span></div>)}
         {status && <div className="empty">{status}</div>}
       </div>
       {picked && (
-        <div className="card" style={{ position: "absolute", right: 12, bottom: 12, maxWidth: 300 }}>
+        <div className="card" style={{ position: "absolute", right: 16, bottom: 16, maxWidth: 300, background: "rgba(18,22,28,.82)", backdropFilter: "blur(12px)" }}>
           {picked.kind === "pod" ? (<>
             <b>@{picked.c.handle}</b> <span className="badge">{picked.c.platform}</span>
             <div style={{ margin: "6px 0" }}>{HOUSES[picked.level - 1].name} (level {picked.level})</div>

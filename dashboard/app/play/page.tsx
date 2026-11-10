@@ -1,6 +1,5 @@
 "use client";
 import { Suspense, useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase, configured } from "@/lib/supabase";
 import { HOUSES, type Poll } from "@/lib/game";
@@ -90,7 +89,7 @@ function PlayInner() {
 
   return (
     <div className="wrap" style={{ maxWidth: 760 }}>
-      <div className="top"><h1>Jadi Warga</h1><span><Link href="/world">🌐 Dunia</Link> · <Link href="/">Dashboard</Link></span></div>
+      <div className="page-head"><div><h1>Jadi Warga</h1><div className="sub">Rumah pod gratis, dompet koin, check-in harian, dan link referral.</div></div></div>
       {msg && <p className="msg">{msg}</p>}{err && <p className="msg err">{err}</p>}
 
       {!session && (

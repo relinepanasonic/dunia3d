@@ -93,7 +93,7 @@ export default function Admin() {
 
   return (
     <div className="wrap">
-      <div className="top"><h1>Admin · Negara Gue</h1><span><Link href="/">Halaman publik</Link> · <button className="ghost" onClick={() => supabase.auth.signOut()}>Keluar</button></span></div>
+      <div className="page-head"><div><h1>Admin</h1><div className="sub">{user}</div></div><button className="ghost" onClick={() => supabase.auth.signOut()}>Keluar</button></div>
       {msg && <p className="msg">{msg}</p>}{err && <p className="msg err">{err}</p>}
 
       <h2>Event / polling baru</h2>
