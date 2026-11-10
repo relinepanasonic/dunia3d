@@ -50,7 +50,7 @@ def facts_text(p):
         lines.append(f"Komen teratas: @{p['top_comment']['user']}: \"{p['top_comment']['text']}\" ({p['top_comment']['likes']} like)")
     if t:
         lines.append(f"Bangunan target: {t['name']} (butuh pajak {t['pajak']}, inspirasi {t['inspirasi']} komen, penduduk {t['penduduk']}, pengaruh {t['pengaruh']})")
-    lines.append('HASIL: BERHASIL dibangun sekarang.' if p['built_now'] else f"HASIL: BELUM cukup, kurang {p['shortfall']}")
+    lines.append('HASIL: BERHASIL dibangun sekarang.' if p['built_now'] else (f"HASIL: BELUM cukup, kurang {p['shortfall']}" if p['target'] else 'HASIL: tidak ada bangunan baru hari ini.'))
     return '\n'.join(lines)
 
 
@@ -116,7 +116,7 @@ def run(day, offline=False, force=False, max_tries=3):
     totals = inputs["totals"]
     ctx_path = d / "context.json"
     ctx = read_json(ctx_path) if ctx_path.exists() else {}
-    plan = game.plan(bible, totals, inputs["comments"], ctx.get("poll_target"))
+    plan = game.plan(bible, totals, inputs["comments"], ctx.get("poll_target") or ctx.get("duel_target"), ctx.get("disable_auto", False))
     write_json(d / "game_plan.json", plan)
     facts = facts_text(plan) + ("\n" + ctx["extra_facts"] if ctx.get("extra_facts") else "")
     print("GAME FACTS:\n" + facts)

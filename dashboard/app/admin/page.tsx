@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase, configured } from "@/lib/supabase";
-import { STYLES, type Building, type Poll, type Report } from "@/lib/game";
+import { STYLES, type Building, type Duel, type Poll, type Report } from "@/lib/game";
 
 type Cm = { id: number; day: number | null; ig_user: string; text: string; likes: number; status: string };
 type Ep = { day: number; title: string | null; caption: string | null; video_url: string | null; status: string; platforms: Record<string, { id?: string; error?: string }> | null };
@@ -23,10 +23,12 @@ export default function Admin() {
   const [nc, setNc] = useState({ ig_user: "", text: "", likes: 0 });
   const [np, setNp] = useState({ title: "", question: "", closes_day: 0, quorum: 3, kind: "building" });
   const [brand, setBrand] = useState("");
+  const [duels, setDuels] = useState<Duel[]>([]);
+  const [du, setDu] = useState({ day: 0, min: 0, a: "", b: "", cname: "", cstyle: 0, cpitch: "" });
   const [opts, setOpts] = useState<Opt[]>([blankOpt(), blankOpt()]);
 
   const load = useCallback(async () => {
-    const [b, c, e, a, p, r, s, br] = await Promise.all([
+    const [b, c, e, a, p, r, s, br, dl] = await Promise.all([
       supabase.from("ng_buildings").select("*").order("slot"),
       supabase.from("ng_comments").select("*").order("likes", { ascending: false }).limit(100),
       supabase.from("ng_episodes").select("*").order("day", { ascending: false }),
@@ -35,7 +37,9 @@ export default function Admin() {
       supabase.from("ng_reports").select("*").order("day", { ascending: false }).limit(5),
       supabase.from("ng_snapshots").select("day").order("day", { ascending: false }).limit(1),
       supabase.from("ng_state").select("value").eq("key", "brand").maybeSingle(),
+      supabase.from("ng_duels").select("*").order("day", { ascending: false }).limit(8),
     ]);
+    setDuels((dl.data ?? []) as Duel[]);
     setBrand(((br.data?.value as { name?: string } | null)?.name) ?? "");
     setBlds((b.data ?? []) as Building[]); setCms((c.data ?? []) as Cm[]); setEps((e.data ?? []) as Ep[]);
     setPolls((p.data ?? []) as Poll[]); setReports((r.data ?? []) as Report[]);
@@ -78,6 +82,17 @@ export default function Admin() {
     if (e2) return bad(e2.message);
     ok("Polling dibuat. Episode berikutnya akan mengumumkannya; hasil dihitung saat tutup."); setNp({ title: "", question: "", closes_day: lastDay + 2, quorum: 3, kind: "building" }); setOpts([blankOpt(), blankOpt()]); load();
   }
+  async function createDuel() {
+    const day = du.day || lastDay + 1;
+    const pick = (id: string) => blds.find((x) => x.id === id);
+    const A = pick(du.a), B = du.b === "custom" ? null : pick(du.b);
+    if (!A || (!B && !du.cname.trim())) return bad("Pilih bangunan A dan B (atau isi nama bangunan custom untuk B).");
+    const opt = (side: string, x: Building) => ({ side, building_id: x.id, name: x.name, style: x.style ?? 0 });
+    const options = [opt("A", A), B ? opt("B", B) : { side: "B", building_id: "custom_" + Date.now(), name: du.cname.trim(), style: du.cstyle, custom: true, pitch: du.cpitch ? [du.cpitch] : undefined }];
+    const { error } = await supabase.from("ng_duels").upsert({ day, status: "planned", min_likes: du.min || 30, options }, { onConflict: "day" });
+    error ? bad(error.message) : (ok(`Duel Day ${day} dijadwalkan: ${options[0].name} vs ${options[1].name}. Dua reel dibuat otomatis di run harian.`), load());
+  }
+  async function cancelDuel(id: number) { const { error } = await supabase.from("ng_duels").update({ status: "cancelled" }).eq("id", id); error ? bad(error.message) : load(); }
   async function saveBrand() {
     const name = brand.trim();
     if (name.length < 2 || name.length > 30) return bad("Nama negara 2-30 karakter.");
@@ -104,6 +119,28 @@ export default function Admin() {
     <div className="wrap">
       <div className="page-head"><div><h1>Admin</h1><div className="sub">{user}</div></div><button className="ghost" onClick={() => supabase.auth.signOut()}>Keluar</button></div>
       {msg && <p className="msg">{msg}</p>}{err && <p className="msg err">{err}</p>}
+
+      <h2>Duel reel (minggu 1)</h2>
+      <div className="card">
+        <p className="empty" style={{ marginTop: 0 }}>Tanpa isian, run harian otomatis memilih dua bangunan berikutnya dan menghitung minimal like dari jumlah follower. Isi di sini untuk memilih sendiri.</p>
+        <div className="form">
+          <label>Untuk hari ke-<input type="number" min={lastDay + 1} value={du.day || lastDay + 1} onChange={(e) => setDu({ ...du, day: +e.target.value })} /></label>
+          <label>Minimal like<input type="number" min={1} value={du.min || ""} placeholder="auto" onChange={(e) => setDu({ ...du, min: +e.target.value })} /></label>
+          <label>Kandidat A<select value={du.a} onChange={(e) => setDu({ ...du, a: e.target.value })}><option value="">pilih…</option>{blds.filter((x) => x.built_day == null).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}</select></label>
+          <label>Kandidat B<select value={du.b} onChange={(e) => setDu({ ...du, b: e.target.value })}><option value="">pilih…</option>{blds.filter((x) => x.built_day == null && x.id !== du.a).map((x) => <option key={x.id} value={x.id}>{x.name}</option>)}<option value="custom">+ Custom…</option></select></label>
+          {du.b === "custom" && <>
+            <label>Nama custom<input value={du.cname} onChange={(e) => setDu({ ...du, cname: e.target.value })} placeholder="Free Meal Center" /></label>
+            <label>Model 3D<select value={du.cstyle} onChange={(e) => setDu({ ...du, cstyle: +e.target.value })}>{STYLES.map((s, k) => <option key={k} value={k}>{s}</option>)}</select></label>
+            <label style={{ flex: 1 }}>Kalimat promosi<input value={du.cpitch} onChange={(e) => setDu({ ...du, cpitch: e.target.value })} placeholder="Makan gratis untuk semua warga." style={{ width: "100%" }} /></label>
+          </>}
+          <button onClick={createDuel}>Jadwalkan duel</button>
+        </div>
+        {duels.length > 0 && <table style={{ marginTop: 12 }}><thead><tr><th>Day</th><th>A vs B</th><th>Minimal</th><th>Status</th><th>Like A / B</th><th /></tr></thead><tbody>
+          {duels.map((x) => <tr key={x.id}><td>{x.day}</td><td>{x.options.map((o) => o.name).join(" vs ")}</td><td>{x.min_likes}</td><td><span className="badge">{x.status}</span></td>
+            <td>{x.options.map((o) => x.result?.likes?.[o.side] ?? o.likes ?? 0).join(" / ")}</td>
+            <td>{(x.status === "planned" || x.status === "open") && <button className="ghost" onClick={() => cancelDuel(x.id)}>Batalkan</button>}</td></tr>)}
+        </tbody></table>}
+      </div>
 
       <h2>Nama negara</h2>
       <div className="card form">

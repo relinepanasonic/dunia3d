@@ -16,8 +16,20 @@ ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 from common import SERIES, load_env, read_json, write_json, config, day_dir  # noqa: E402
 import game  # noqa: E402
+import duel as duel_mod  # noqa: E402
 from stats.collect import collect  # noqa: E402
 from sync import supabase_sync as sb  # noqa: E402
+
+
+def safe_get(path):
+    """Read from Supabase; a missing table (migration not run yet) must not stop the daily job."""
+    if not sb.configured():
+        return []
+    try:
+        return sb.get(path)
+    except RuntimeError as e:
+        print(f"[loop] WARNING: could not read {path.split('?')[0]}: {str(e)[:100]}")
+        return []
 
 
 def today_day(cfg):
@@ -99,8 +111,21 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
     if new_name:
         announce.append(f"NAMA NEGARA BARU: {new_name}. Mulai sekarang negara ini bernama {new_name}; sebut nama baru ini dengan jelas di video.")
 
+    # ---- 3b. week-1 duel: yesterday's two reels -> winner by likes -> today's build (free; likes were the price)
+    g = game.rules()
+    fx = read_json(fixture) if fixture else {}
+    duel_target, duel_closed = None, None
+    prev_duel = fx.get("duel_prev") or (safe_get(f"ng_duels?day=eq.{day-1}&status=eq.open&select=*") or [None])[0]
+    if prev_duel:
+        res = game.resolve_duel(prev_duel, duel_mod.read_likes(prev_duel, fx.get("duel_likes")))
+        if res["built"]:
+            duel_target = game.duel_building(prev_duel, res["winner"])
+        poll_reports.append(game.duel_report(prev_duel, res))
+        duel_closed = (prev_duel, res)
+        print(f"[duel] {res['reason']} (winner {res['winner']})")
+
     # ---- 4. citizens: coins and influence (only what platforms expose)
-    if sb.configured():  # citizens who comment their NG-code link their web account to that handle
+    if sb.configured() and not dry:  # citizens who comment their NG-code link their web account to that handle
         from sync import claims
         for acct, cm in claims.find_claims(comments):
             claims.apply_claim(acct, cm)
@@ -111,7 +136,8 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
         | {(m.get("platform", "instagram"), m["handle"]) for m in mentions} | {(v["platform"], v["handle"]) for v in new_votes}
     divs = game.dividends(pool, {k: existing.get(k, {}).get("level", 1) for k in keys})
     act = game.activity_rows(day, comments, mentions, new_votes, divs)
-    sb.upsert("ng_activity", act, "day,platform,handle")
+    if not dry:
+        sb.upsert("ng_activity", act, "day,platform,handle")
     all_act = sb.get("ng_activity?select=*&limit=100000") if sb.configured() else act
     citizens = game.citizen_scores(all_act)
     upgrades = []
@@ -136,7 +162,16 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
     extra.append(economy + " (Setiap warga dapat rumah pod gratis; like+share menjadi dividen untuk semua warga; rumah bisa di-upgrade dengan koin.)")
     if citizens:
         extra.append("WARGA TERPENGARUH: " + ", ".join(f"@{c['handle']} (pengaruh {c['pengaruh']}, koin {c['coins']})" for c in citizens[:3]))
-    write_json(d / "context.json", {"poll_target": poll_target, "extra_facts": "\n".join(extra)})
+    if duel_closed:
+        pd, rs = duel_closed
+        wn = next(o for o in pd["options"] if o["side"] == rs["winner"])["name"]
+        extra.append(f"HASIL DUEL (hitungan sistem): {rs['likes']['A']} like untuk A, {rs['likes']['B']} like untuk B, minimal {pd['min_likes']}. "
+                     + (f"{wn} menang dan dibangun GRATIS." if rs["built"] else f"{wn} unggul tapi belum capai minimal, pembangunan ditunda."))
+    if game.duel_enabled(day, g):
+        extra.append("MINGGU DUEL: bangunan hanya dibangun lewat duel dua reel presentasi (A vs B); like terbanyak menang jika capai minimal. "
+                     "Ajak penonton like reel presentasi hari ini untuk memilih. Pajak tidak dipakai minggu ini.")
+    write_json(d / "context.json", {"poll_target": poll_target, "duel_target": duel_target,
+                                    "disable_auto": game.duel_enabled(day, g), "extra_facts": "\n".join(extra)})
     cmd = [sys.executable, "-I", str(ROOT / "pipeline.py"), "episode", "--day", str(day), "--until", until]
     if offline:
         cmd.append("--offline")
@@ -182,6 +217,34 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
         print("[loop] dashboard updated")
     else:
         print("[loop] Supabase not configured or --dry-run: dashboard not updated")
+
+    # ---- 7b. today's duel: two presentation reels (only in duel week, only when we really render)
+    if game.duel_enabled(day, g) and until == "render":
+        planned = (safe_get(f"ng_duels?day=eq.{day}&select=*") or [None])[0]
+        cands = game.pick_candidates(after, 2, g)
+        if planned and planned.get("status") in ("planned", "open"):
+            duel = dict(planned)
+            duel["options"] = [dict(game.duel_option({"id": o.get("building_id", f"custom{i}"), "name": o["name"], "style": o.get("style", 0),
+                                                       "pitch": o.get("pitch") or None}, o["side"], bool(o.get("custom"))), **{k: o[k] for k in o if k in ("video_url", "media")}) for i, o in enumerate(planned["options"])]
+        elif len(cands) == 2:
+            duel = {"day": day, "min_likes": game.duel_min_likes(totals["followers"], g), "followers_at_start": totals["followers"],
+                    "options": [game.duel_option(cands[0], "A"), game.duel_option(cands[1], "B")]}
+        else:
+            duel = None
+            print("[duel] fewer than two unbuilt buildings left; no duel today")
+        if duel:
+            print(f"[duel] reels for day {day}: {duel['options'][0]['name']} vs {duel['options'][1]['name']} (minimum {duel['min_likes']} like)")
+            vids = duel_mod.make_reels(day, duel, d)
+            if sb.configured() and not dry:
+                from upload import platforms as P
+                for o in duel["options"]:
+                    o["video_url"] = P.storage_upload(vids[o["side"]], f"day-{day:02d}-duel-{o['side'].lower()}-draft.mp4")
+                sb.upsert("ng_duels", [{"day": day, "status": "open", "min_likes": duel["min_likes"],
+                                        "followers_at_start": duel.get("followers_at_start", totals["followers"]), "options": duel["options"]}], "day")
+            write_json(d / "duel.json", duel)
+        if duel_closed and sb.configured() and not dry:
+            pd, rs = duel_closed
+            sb.patch_rows("ng_duels", f"id=eq.{pd['id']}", {"status": "resolved", "winner": rs["winner"], "result": rs})
 
     # ---- 8. upload (approval-gated)
     if upload and until == "render":

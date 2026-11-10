@@ -81,7 +81,11 @@
       "penduduk": 20,
       "pengaruh": 0,
       "slot": 0,
-      "style": 0
+      "style": 0,
+      "pitch": [
+        "Dapur rakyat, makan murah dan sehat.",
+        "Semua penduduk dapat nutrisi gratis."
+      ]
     },
     {
       "id": "menara_energi",
@@ -91,7 +95,11 @@
       "penduduk": 60,
       "pengaruh": 0,
       "slot": 1,
-      "style": 1
+      "style": 1,
+      "pitch": [
+        "Listrik bersih untuk seluruh kota.",
+        "Lampu kota menyala sepanjang malam."
+      ]
     },
     {
       "id": "stasiun_maglev",
@@ -101,7 +109,11 @@
       "penduduk": 150,
       "pengaruh": 10,
       "slot": 2,
-      "style": 2
+      "style": 2,
+      "pitch": [
+        "Kereta super cepat antar distrik.",
+        "Perjalanan kota jadi cuma hitungan menit."
+      ]
     },
     {
       "id": "klinik_hologram",
@@ -111,7 +123,11 @@
       "penduduk": 300,
       "pengaruh": 15,
       "slot": 3,
-      "style": 3
+      "style": 3,
+      "pitch": [
+        "Dokter hologram siaga dua puluh empat jam.",
+        "Rakyat sehat, negara makin kuat."
+      ]
     },
     {
       "id": "kampus_ai",
@@ -121,7 +137,11 @@
       "penduduk": 500,
       "pengaruh": 30,
       "slot": 4,
-      "style": 4
+      "style": 4,
+      "pitch": [
+        "Belajar bareng guru kecerdasan buatan.",
+        "Generasi pintar lahir dari sini."
+      ]
     },
     {
       "id": "kedutaan",
@@ -131,7 +151,11 @@
       "penduduk": 800,
       "pengaruh": 100,
       "slot": 5,
-      "style": 5
+      "style": 5,
+      "pitch": [
+        "Pintu diplomasi ke negara lain.",
+        "Pengaruh negara jadi mendunia."
+      ]
     },
     {
       "id": "stadion_hover",
@@ -141,7 +165,11 @@
       "penduduk": 1200,
       "pengaruh": 150,
       "slot": 6,
-      "style": 6
+      "style": 6,
+      "pitch": [
+        "Pertandingan melayang di udara.",
+        "Semua rakyat bersorak bersama."
+      ]
     },
     {
       "id": "pelabuhan_orbit",
@@ -151,7 +179,11 @@
       "penduduk": 3000,
       "pengaruh": 300,
       "slot": 7,
-      "style": 7
+      "style": 7,
+      "pitch": [
+        "Gerbang roket ke luar angkasa.",
+        "Negara kita siap menuju orbit."
+      ]
     }
   ],
   "_rules": [
@@ -193,5 +225,12 @@
       "name": "Mansion Oktagon",
       "cost": 1000
     }
-  ]
+  ],
+  "duel": {
+    "_doc": "Week-1 rule: two presentation reels (A/B) compete on likes. The winner is built, free of pajak, if it reaches min_likes (max(min_floor, followers*min_pct)); otherwise it is postponed. Days after `days` use the normal pajak/comment rules.",
+    "enabled": true,
+    "days": 7,
+    "min_floor": 30,
+    "min_pct": 0.04
+  }
 }

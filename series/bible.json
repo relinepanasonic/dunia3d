@@ -6,17 +6,18 @@
     "sign": true,
     "chair": true,
     "houses": 2,
-    "campfire": true,
     "styles": [
       0,
       0
-    ]
+    ],
+    "campfire": true
   },
+  "score": 428,
   "totals": {
-    "followers": 125,
     "likes": 660,
     "shares": 40,
-    "comments": 44
+    "comments": 44,
+    "followers": 125
   },
   "pengaruh": 40,
   "buildings": [
@@ -33,24 +34,23 @@
     "Tower Technology disuruh sabar"
   ],
   "story_so_far": "Day 2: Kedai Nutrisi berdiri. Day 3: polling Free Meal vs Tower Technology, Free Meal menang 6-4; Kota Neon tercapai.",
+  "pending_target": null,
   "buildings_built": [
     "kedai_nutrisi",
     "poll1_0"
   ],
-  "next_episode_teaser": "Day 4: polling baru; Tower Technology menunggu giliran.",
-  "score": 428,
   "custom_buildings": [
     {
       "id": "poll1_0",
       "name": "Dapur Free Meal",
+      "slot": 8,
       "pajak": 150,
-      "inspirasi": 0,
+      "style": 0,
+      "poll_id": 1,
       "penduduk": 0,
       "pengaruh": 0,
-      "slot": 8,
-      "style": 0,
-      "poll_id": 1
+      "inspirasi": 0
     }
   ],
-  "pending_target": null
+  "next_episode_teaser": "Day 4: polling baru; Tower Technology menunggu giliran."
 }

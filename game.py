@@ -150,6 +150,54 @@ def upgrade(coins, spent, level, g=None):
     return level, spent
 
 
+# ---------------------------------------------------------------- week-1 duel (two reels, likes decide)
+def duel_enabled(day, g=None):
+    d = (g or rules()).get("duel", {})
+    return bool(d.get("enabled")) and day <= d.get("days", 7)
+
+
+def duel_min_likes(followers, g=None):
+    d = (g or rules())["duel"]
+    return max(d["min_floor"], round(followers * d["min_pct"]))
+
+
+def pick_candidates(bible, n=2, g=None):
+    """The next n unbuilt catalog buildings, cheapest slot first (admin can override by creating the duel by hand)."""
+    built = set(bible.get("buildings_built", []))
+    return [b for b in catalog(bible, g) if b["id"] not in built][:n]
+
+
+def duel_option(b, side, custom=False):
+    return {"side": side, "building_id": b["id"], "name": b["name"], "style": b.get("style", 0),
+            "pitch": b.get("pitch") or [f"{b['name']}: bangunan baru untuk negara kita."], "custom": custom,
+            "video_url": None, "media": {}, "likes": 0}
+
+
+def resolve_duel(duel, likes):
+    """likes = {'A': n, 'B': n} (summed over platforms). Winner = more likes (tie -> A); built only if it reaches min_likes."""
+    a, b = likes.get("A", 0), likes.get("B", 0)
+    side = "A" if a >= b else "B"
+    n, need = max(a, b), duel["min_likes"]
+    built = n >= need
+    reason = (f"{n} like >= minimum {need}: dibangun" if built else f"hanya {n} like, minimum {need}: ditunda")
+    return {"winner": side, "built": built, "likes": {"A": a, "B": b}, "reason": reason}
+
+
+def duel_building(duel, side):
+    o = next(x for x in duel["options"] if x["side"] == side)
+    return {"id": o["building_id"], "name": o["name"], "pajak": 0, "inspirasi": 0, "penduduk": 0, "pengaruh": 0,
+            "slot": 8, "style": o.get("style", 0), "free": True, "custom": bool(o.get("custom"))}
+
+
+def duel_report(duel, res):
+    A, B = (next(x for x in duel["options"] if x["side"] == s) for s in "AB")
+    lines = [f"LAPORAN DUEL DAY {duel['day']}",
+             f"A) {A['name']}: {res['likes']['A']} like", f"B) {B['name']}: {res['likes']['B']} like",
+             f"Minimal like agar dibangun: {duel['min_likes']}.",
+             f"Pemenang: {res['winner']}) {(A if res['winner'] == 'A' else B)['name']} - {res['reason']}."]
+    return "\n".join(lines)
+
+
 # ---------------------------------------------------------------- episode plan
 def _match_building(comment, cat):
     text = comment["text"].lower()
@@ -167,7 +215,7 @@ def _match_building(comment, cat):
     return None
 
 
-def plan(bible, totals, comments, poll_target=None):
+def plan(bible, totals, comments, poll_target=None, disable_auto=False):
     """This episode's facts. `totals` = combined cumulative numbers {followers, likes, shares, comments}."""
     g = rules()
     cat = catalog(bible, g)
@@ -186,7 +234,9 @@ def plan(bible, totals, comments, poll_target=None):
     target, top_comment, source = None, None, "komen"
     pending = poll_target or bible.get("pending_target")
     if pending and pending["id"] not in built:
-        target, source = pending, "poll"
+        target, source = pending, ("duel" if pending.get("free") else "poll")
+    elif disable_auto:  # duel week: only a duel winner can be built
+        target = None
     else:
         for c in ranked:
             b = _match_building(c, [b for b in cat if b["id"] not in built])
@@ -197,7 +247,9 @@ def plan(bible, totals, comments, poll_target=None):
             target = left[0] if left else None
     result = {"delta": delta, "state": state, "tier": tier_for(state["penduduk"], g)["name"], "top_comment": top_comment,
               "target": target, "target_source": source, "built_now": None, "shortfall": {}}
-    if target:
+    if target and target.get("free"):  # duel winner: likes were the price
+        result["built_now"] = target
+    elif target:
         need = {"pajak": target["pajak"] - state["pajak"], "inspirasi": target["inspirasi"] - state["inspirasi_episode"],
                 "penduduk": target["penduduk"] - state["penduduk"], "pengaruh": target["pengaruh"] - state["pengaruh"]}
         short = {a: v for a, v in need.items() if v > 0}
@@ -214,7 +266,8 @@ def apply(bible, totals, p, story):
     s, g = p["state"], rules()
     custom = list(bible.get("custom_buildings", []))
     tgt = p["target"]
-    if tgt and tgt.get("poll_id") is not None and tgt["id"] not in {c["id"] for c in custom}:
+    if tgt and tgt["id"] not in {c["id"] for c in custom} and (
+            tgt.get("poll_id") is not None or (tgt.get("free") and tgt.get("custom") and p["built_now"])):
         custom.append(tgt)
     bb = dict(bible, custom_buildings=custom)
     cat = {b["id"]: b for b in catalog(bb, g)}

@@ -1,0 +1,381 @@
+{
+ "title": "Day 3: Free Meal Menang Polling",
+ "hook": "Day tiga. Rakyat gue seratus dua puluh enam!",
+ "shots": [
+  {
+   "camera": "wide_push",
+   "character_anim": "idle",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Day tiga. Rakyat gue seratus dua puluh enam!",
+   "caption_words": [
+    "Day tiga.",
+    "Rakyat gue",
+    "seratus dua",
+    "puluh enam!"
+   ],
+   "highlight_word": "enam",
+   "overlay": {
+    "type": "hook"
+   }
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "nod",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Naik tier. Selamat datang di Kota Neon.",
+   "caption_words": [
+    "Naik tier.",
+    "Selamat datang",
+    "di Kota Neon."
+   ],
+   "highlight_word": "Neon",
+   "overlay": {
+    "type": "kpi",
+    "followers": 126,
+    "pajak": 620,
+    "pengaruh": 40,
+    "inspirasi": 32,
+    "goal": "Dapur Free Meal",
+    "progress": 100
+   }
+  },
+  {
+   "camera": "close_push",
+   "character_anim": "shrug",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Dari semua platform, skor negara empat ratus dua puluh delapan.",
+   "caption_words": [
+    "Dari semua platform,",
+    "skor negara",
+    "empat ratus",
+    "dua puluh",
+    "delapan."
+   ],
+   "highlight_word": "skor"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "point",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Kemarin gue tanya: Free Meal atau Tower Technology?",
+   "caption_words": [
+    "Kemarin gue tanya:",
+    "Free Meal",
+    "atau",
+    "Tower Technology?"
+   ],
+   "highlight_word": "Tower",
+   "overlay": {
+    "type": "card",
+    "rows": [
+     {
+      "label": "A",
+      "text": "Free Meal"
+     },
+     {
+      "label": "B",
+      "text": "Tower Technology"
+     }
+    ]
+   }
+  },
+  {
+   "camera": "close_push",
+   "character_anim": "nod",
+   "expression": "annoyed",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Sepuluh suara masuk lewat komen.",
+   "caption_words": [
+    "Sepuluh suara",
+    "masuk lewat",
+    "komen."
+   ],
+   "highlight_word": "Sepuluh"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "point",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Free Meal menang. Enam suara lawan empat.",
+   "caption_words": [
+    "Free Meal menang.",
+    "Enam suara",
+    "lawan empat."
+   ],
+   "highlight_word": "menang",
+   "overlay": {
+    "type": "comment",
+    "user": "demo_rina",
+    "text": "free meal!! rakyat butuh makan"
+   }
+  },
+  {
+   "camera": "medium_pull",
+   "character_anim": "shrug",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Tower Technology, sabar ya. Giliran berikutnya.",
+   "caption_words": [
+    "Tower Technology,",
+    "sabar ya.",
+    "Giliran berikutnya."
+   ],
+   "highlight_word": "sabar"
+  },
+  {
+   "camera": "drone",
+   "character_anim": "walk",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 1,
+    "campfire": false
+   },
+   "duration_sec": 4.5,
+   "voiceover_text": "Gue cari lahan buat Dapur Free Meal.",
+   "caption_words": [
+    "Gue cari lahan",
+    "buat Dapur",
+    "Free Meal."
+   ],
+   "highlight_word": "lahan",
+   "overlay": {
+    "type": "drone"
+   }
+  },
+  {
+   "camera": "wide_push",
+   "character_anim": "wave",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 2,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Dapur Free Meal resmi berdiri!",
+   "caption_words": [
+    "Dapur Free Meal",
+    "resmi berdiri!"
+   ],
+   "highlight_word": "berdiri"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "point",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 2,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Warga paling berpengaruh hari ini, rina.",
+   "caption_words": [
+    "Warga paling",
+    "berpengaruh hari ini,",
+    "rina."
+   ],
+   "highlight_word": "rina",
+   "overlay": {
+    "type": "idcard",
+    "sub": "WARGA TERPENGARUH",
+    "nik": "0003",
+    "name": "@demo_rina",
+    "status": "pengaruh 12 - koin 27"
+   }
+  },
+  {
+   "camera": "close_push",
+   "character_anim": "nod",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 2,
+    "campfire": false
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Dua kali tag akun gue. Pengaruhnya gede.",
+   "caption_words": [
+    "Dua kali",
+    "tag akun gue.",
+    "Pengaruhnya gede."
+   ],
+   "highlight_word": "tag"
+  },
+  {
+   "camera": "orbit",
+   "character_anim": "idle",
+   "expression": "smile",
+   "scene_state": {
+    "time": "day",
+    "sign": true,
+    "chair": true,
+    "houses": 2,
+    "campfire": false,
+    "time_to": "dusk"
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Sore tiba, dapur langsung antre.",
+   "caption_words": [
+    "Sore tiba,",
+    "dapur langsung",
+    "antre."
+   ],
+   "highlight_word": "antre"
+  },
+  {
+   "camera": "medium_push",
+   "character_anim": "nod",
+   "expression": "smirk",
+   "scene_state": {
+    "time": "dusk",
+    "sign": true,
+    "chair": true,
+    "houses": 2,
+    "campfire": true,
+    "time_to": "night"
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Besok polling baru. Kalian mau apa?",
+   "caption_words": [
+    "Besok polling baru.",
+    "Kalian mau apa?"
+   ],
+   "highlight_word": "polling"
+  },
+  {
+   "camera": "close_push",
+   "character_anim": "sleep",
+   "expression": "sleep",
+   "scene_state": {
+    "time": "night",
+    "sign": true,
+    "chair": true,
+    "houses": 2,
+    "campfire": true
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Gue tidur dulu ya.",
+   "caption_words": [
+    "Gue tidur",
+    "dulu ya."
+   ],
+   "highlight_word": "tidur",
+   "overlay": {
+    "type": "follow",
+    "text": "+ FOLLOW BIAR JADI PENDUDUK"
+   }
+  },
+  {
+   "camera": "medium_pull",
+   "character_anim": "wave",
+   "expression": "smile",
+   "scene_state": {
+    "time": "night",
+    "sign": true,
+    "chair": true,
+    "houses": 2,
+    "campfire": true
+   },
+   "duration_sec": 4.2,
+   "voiceover_text": "Besok Day empat. Komen pilihan lo!",
+   "caption_words": [
+    "Besok Day empat.",
+    "Komen pilihan lo!"
+   ],
+   "highlight_word": "pilihan",
+   "overlay": {
+    "type": "end",
+    "big": "DAY 4",
+    "sub": "polling baru: komen A atau B"
+   }
+  }
+ ],
+ "ig_caption": "Day 3: polling warga selesai, Free Meal menang! Komen buat voting di polling berikutnya, follow biar jadi penduduk.",
+ "hashtags": [
+  "#negarague",
+  "#polling",
+  "#animasi3d",
+  "#fyp",
+  "#reels"
+ ],
+ "bible_update": {
+  "population": 126,
+  "followers": 125,
+  "buildings": [
+   "Kedai Nutrisi",
+   "Dapur Free Meal"
+  ],
+  "running_gags": [
+   "Lo follow = jadi penduduk",
+   "Komen teratas = gue bangun",
+   "Polling warga menentukan bangunan",
+   "Tower Technology disuruh sabar"
+  ],
+  "story_so_far": "Day 2: Kedai Nutrisi berdiri. Day 3: polling Free Meal vs Tower Technology, Free Meal menang 6-4; Kota Neon tercapai.",
+  "next_episode_teaser": "Day 4: polling baru; Tower Technology menunggu giliran."
+ }
+}

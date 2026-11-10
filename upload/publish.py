@@ -53,7 +53,48 @@ def run(day, dry_run=False, force=False):
         print(f"[upload] {name}: posted {pid}")
     ok = any(v.get("id") for v in done.values())
     sb.patch_rows("ng_episodes", f"day=eq.{day}", {"platforms": done, "video_url": url, **({"status": "published"} if ok else {})})
+    if ok:
+        run_duel(day, dry_run)
     return ok
+
+
+def run_duel(day, dry_run=False):
+    """Publish both duel presentation reels (same approval as the episode) and remember their media ids for like counting."""
+    cfg = load_cfg()
+    rows = sb.get(f"ng_duels?day=eq.{day}&select=*") if sb.configured() else []
+    if not rows or rows[0]["status"] != "open":
+        return False
+    duel, d = rows[0], day_dir(day)
+    for o in duel["options"]:
+        if o.get("media"):
+            continue  # already posted
+        side = o["side"].lower()
+        vid = d / f"duel-{side}" / "video.mp4"
+        if not vid.exists():
+            print(f"[duel] {vid} missing; skipping reel {o['side']}"); continue
+        post = read_json(d / f"duel-{side}" / "post.json")
+        caption = post["caption"] + "\n\n" + " ".join(post["hashtags"])
+        if dry_run:
+            print(f"[duel][dry-run] would post reel {o['side']}: {o['name']}"); continue
+        url = P.storage_upload(vid, f"day-{day:02d}-duel-{side}.mp4")
+        o["video_url"], media = url, {}
+        for name in cfg.get("platforms", ["instagram", "youtube", "tiktok"]):
+            try:
+                pid = {"instagram": lambda: P.instagram_publish(url, caption),
+                       "youtube": lambda: P.youtube_publish(str(vid), post["title"], caption, cfg.get("youtube_privacy", "private")),
+                       "tiktok": lambda: P.tiktok_publish(str(vid), caption, cfg.get("tiktok_mode", "inbox"))}[name]()
+            except Exception as e:
+                print(f"[duel] reel {o['side']} on {name} FAILED: {e}"); continue
+            if pid:
+                media[name] = pid; print(f"[duel] reel {o['side']} -> {name} {pid}")
+        o["media"] = media
+    if not dry_run:
+        sb.patch_rows("ng_duels", f"id=eq.{duel['id']}", {"options": duel["options"]})
+    return True
+
+
+def load_cfg():
+    return config()
 
 
 if __name__ == "__main__":

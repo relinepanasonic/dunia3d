@@ -54,3 +54,6 @@ export function levelOf(c: WorldCitizen) {
   for (const h of HOUSES.slice(1)) { if (left >= h.cost) { left -= h.cost; lvl = h.level; } else break; }
   return lvl;
 }
+
+export type DuelOption = { side: "A" | "B"; building_id: string; name: string; style: number; pitch?: string[]; custom?: boolean; video_url?: string | null; media?: Record<string, string>; likes?: number };
+export type Duel = { id: number; day: number; status: string; min_likes: number; followers_at_start: number; options: DuelOption[]; winner: "A" | "B" | null; result: { likes?: Record<string, number>; built?: boolean; reason?: string } | null };

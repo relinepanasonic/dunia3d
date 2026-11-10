@@ -54,6 +54,8 @@ export const CAMERAS={
   close_push: [{p:[0,3.1,7.0],l:[0,2.95,0]},{p:[0,3.05,5.0],l:[0,2.95,0]}],
   drone:      [{p:[0,32,15],l:[0,0,-4]},{p:[2,20,10],l:[2,0,-5]}],
   orbit:      [{p:[-7,3.2,7],l:[0,2.6,0]},{p:[7,3.2,7],l:[0,2.6,0]}],
+  showcase_orbit:[{p:[-7,5,5],l:[3.8,3.5,-6.5]},{p:[14,6,0],l:[3.8,3.5,-6.5]}],
+  showcase_top:  [{p:[3.8,24,-0.5],l:[3.8,1,-6.5]},{p:[3.8,13,-3],l:[3.8,2,-6.5]}],
 };
 export function applyCamera(cam,name,p){
   const [a,b]=CAMERAS[name],k=ease(p);

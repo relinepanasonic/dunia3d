@@ -1,14 +1,14 @@
 "use client";
 import Link from "next/link";
 import { useState } from "react";
-import { KPI, nextTier, requirements, type Building, type Citizen, type PlatformStat, type Poll, type Report, type Snapshot } from "@/lib/game";
+import { KPI, nextTier, requirements, type Building, type Citizen, type Duel, type PlatformStat, type Poll, type Report, type Snapshot } from "@/lib/game";
 
 const fmt = (n: number) => new Intl.NumberFormat("id-ID").format(n);
 const PLAT: Record<string, string> = { instagram: "Instagram", youtube: "YouTube", tiktok: "TikTok", web: "Web" };
 type Tab = "ringkasan" | "polling" | "warga" | "laporan";
 const TABS: [Tab, string][] = [["ringkasan", "Ringkasan"], ["polling", "Polling"], ["warga", "Warga"], ["laporan", "Laporan"]];
 
-export type HomeData = { history: Snapshot[]; buildings: Building[]; citizens: Citizen[]; polls: Poll[]; reports: Report[]; platRows: PlatformStat[] };
+export type HomeData = { history: Snapshot[]; buildings: Building[]; citizens: Citizen[]; polls: Poll[]; reports: Report[]; platRows: PlatformStat[]; duels: Duel[] };
 
 export default function HomeView({ d }: { d: HomeData }) {
   const [tab, setTab] = useState<Tab>("ringkasan");
@@ -76,6 +76,8 @@ export default function HomeView({ d }: { d: HomeData }) {
       </>)}
 
       {tab === "polling" && (<>
+        {d.duels.filter((x) => x.status !== "cancelled" && x.status !== "planned").length > 0 && <h2>Duel reel (minggu 1)</h2>}
+        {d.duels.filter((x) => x.status !== "cancelled" && x.status !== "planned").map((x) => <DuelCard key={x.id} x={x} />)}
         <h2>Terbuka</h2>
         {openPolls.length ? openPolls.map((p) => <PollCard key={p.id} p={p} />) : <div className="card"><p className="empty" style={{ margin: 0 }}>Belum ada polling terbuka. Admin bisa membuatnya dari halaman Admin.</p></div>}
         <h2>Selesai</h2>
@@ -114,6 +116,27 @@ export default function HomeView({ d }: { d: HomeData }) {
           </div>
         )) : <div className="card"><p className="empty" style={{ margin: 0 }}>Belum ada laporan.</p></div>}
       </>)}
+    </div>
+  );
+}
+
+function DuelCard({ x }: { x: Duel }) {
+  const likes = (s: string) => x.result?.likes?.[s] ?? x.options.find((o) => o.side === s)?.likes ?? 0;
+  const max = Math.max(1, likes("A"), likes("B"), x.min_likes);
+  return (
+    <div className="card" style={{ marginBottom: 10 }}>
+      <b style={{ fontSize: 18 }}>Day {x.day}: dua reel, like terbanyak dibangun</b> <span className={`badge ${x.status === "resolved" ? "ok" : ""}`}>{x.status === "open" ? "berlangsung" : "selesai"}</span>
+      <div className="empty" style={{ marginTop: 4 }}>Minimal {x.min_likes} like supaya dibangun (gratis).{x.result?.reason ? ` Hasil: ${x.result.reason}.` : ""}</div>
+      {x.options.map((o) => (
+        <div key={o.side}>
+          <div className="row"><span>{o.side}) {o.name}{x.winner === o.side ? (x.result?.built ? " 🏆 dibangun" : " 🏆 unggul") : ""}</span><span>{likes(o.side)} like</span></div>
+          <div className="bar" style={{ position: "relative" }}>
+            <i style={{ width: `${Math.round((likes(o.side) / max) * 100)}%`, background: x.winner === o.side ? "var(--lime)" : "var(--accent)" }} />
+            <span style={{ position: "absolute", left: `${Math.round((x.min_likes / max) * 100)}%`, top: -2, bottom: -2, width: 2, background: "#fff", opacity: 0.7 }} title="minimal like" />
+          </div>
+        </div>
+      ))}
+      {x.status === "open" && <p className="empty" style={{ marginBottom: 0 }}>Like reel pilihanmu di Instagram, YouTube atau TikTok. Garis putih = batas minimal.</p>}
     </div>
   );
 }
