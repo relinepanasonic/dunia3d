@@ -18,6 +18,7 @@ from common import SERIES, load_env, read_json, write_json, config, day_dir  # n
 import game  # noqa: E402
 import duel as duel_mod  # noqa: E402
 from stats.collect import collect  # noqa: E402
+from stats import manual  # noqa: E402
 from sync import supabase_sync as sb  # noqa: E402
 
 
@@ -62,13 +63,22 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
 
     # ---- 2. numbers from every platform, combined
     data = collect(fixture)
-    if data["combined"] is None:
-        print("[loop] no platform connected -> using numbers entered on the dashboard (ng_inputs)")
-        sb.pull()
-        comments_in = read_json(SERIES / "comments.json")
-        totals, comments, mentions, per_platform = comments_in["totals"], comments_in["comments"], [], {}
+    per_platform, comments, mentions = dict(data["per_platform"]), list(data["comments"]), list(data["mentions"])
+    manual_cm = []
+    if not fixture:  # manual mode: numbers typed on the admin page fill every platform whose API is not connected
+        for plat, t in manual.platform_totals(day).items():
+            if plat not in per_platform:
+                per_platform[plat] = t
+                print(f"[loop] {plat}: using numbers typed on the admin page")
+        manual_cm = manual.new_comments()
+        if manual_cm:
+            print(f"[loop] {len(manual_cm)} comments typed on the admin page")
+        comments += manual_cm
+    if per_platform:
+        totals = game.combine(per_platform)
     else:
-        totals, comments, mentions, per_platform = data["combined"], data["comments"], data["mentions"], data["per_platform"]
+        print("[loop] no platform connected and no manual numbers: numbers stay as yesterday")
+        totals = dict({k: bible.get("totals", {}).get(k, 0) for k in ("followers", "likes", "shares", "comments")}, views=0)
     top = sorted(comments, key=lambda c: -c.get("likes", 0))[:50]
     write_json(SERIES / "comments.json", {"totals": {k: totals[k] for k in ("followers", "likes", "shares", "comments")}, "comments": top})
 
@@ -228,7 +238,11 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
         if poll_reports:
             sb.upsert("ng_reports", [{"day": day, "kind": "poll", "title": f"Hasil Polling (Day {day})",
                                       "body": "\n\n".join(poll_reports), "data": None}], "day,kind")
-        sb.upsert("ng_episodes", [{"day": day, "title": ep["title"], "caption": ep["ig_caption"], "status": "draft"}], "day")
+        try:
+            sb.upsert("ng_episodes", [{"day": day, "title": ep["title"], "caption": ep["ig_caption"], "hashtags": ep["hashtags"], "status": "draft"}], "day")
+        except Exception:  # migration 0007 not run yet: no hashtags column
+            sb.upsert("ng_episodes", [{"day": day, "title": ep["title"], "caption": ep["ig_caption"], "status": "draft"}], "day")
+        manual.mark_used(manual_cm, day)
         sb.state_set(f"bible_after_{day}", after)
         if until == "render" and (d / "video.mp4").exists():
             from upload import platforms as P

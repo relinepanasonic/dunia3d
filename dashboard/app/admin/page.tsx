@@ -4,8 +4,16 @@ import Link from "next/link";
 import { supabase, configured } from "@/lib/supabase";
 import { STYLES, type Building, type Duel, type Poll, type Report } from "@/lib/game";
 
-type Cm = { id: number; day: number | null; ig_user: string; text: string; likes: number; status: string };
-type Ep = { day: number; title: string | null; caption: string | null; video_url: string | null; status: string; platforms: Record<string, { id?: string; error?: string }> | null };
+type Cm = { id: number; day: number | null; ig_user: string; text: string; likes: number; status: string; platform?: string; used_day?: number | null };
+type Ep = { day: number; title: string | null; caption: string | null; hashtags?: string[] | null; video_url: string | null; status: string; platforms: Record<string, { id?: string; error?: string }> | null };
+const PLATS = ["instagram", "tiktok", "youtube"] as const;
+type Plat = (typeof PLATS)[number];
+const PLAT_LABEL: Record<Plat, string> = { instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube" };
+const MKEYS = ["followers", "likes", "shares", "comments", "views"] as const;
+type MRow = Record<(typeof MKEYS)[number], number>;
+const MLABEL: Record<(typeof MKEYS)[number], string> = { followers: "Follower", likes: "Total like", shares: "Total share", comments: "Total komen", views: "Total views" };
+const zeroRow = (): MRow => ({ followers: 0, likes: 0, shares: 0, comments: 0, views: 0 });
+const fullCaption = (e: Ep) => [e.caption ?? "", (e.hashtags ?? []).join(" ")].filter(Boolean).join("\n\n");
 type Opt = { label: string; building_name: string; style: number; pajak: number };
 
 const blankOpt = (): Opt => ({ label: "", building_name: "", style: 0, pajak: 150 });
@@ -19,8 +27,10 @@ export default function Admin() {
   const [cms, setCms] = useState<Cm[]>([]); const [eps, setEps] = useState<Ep[]>([]);
   const [polls, setPolls] = useState<Poll[]>([]); const [reports, setReports] = useState<Report[]>([]);
   const [lastDay, setLastDay] = useState(0);
-  const [ig, setIg] = useState({ followers: 0, likes: 0, shares: 0, comments: 0 });
-  const [nc, setNc] = useState({ ig_user: "", text: "", likes: 0 });
+  const [man, setMan] = useState<Record<Plat, MRow>>({ instagram: zeroRow(), tiktok: zeroRow(), youtube: zeroRow() });
+  const [manDay, setManDay] = useState<Record<string, number>>({});
+  const [dl, setDl] = useState<Record<string, Record<string, Record<Plat, number>>>>({});
+  const [nc, setNc] = useState({ ig_user: "", text: "", likes: 0, platform: "instagram" });
   const [np, setNp] = useState({ title: "", question: "", closes_day: 0, quorum: 3, kind: "building" });
   const [brand, setBrand] = useState("");
   const [duels, setDuels] = useState<Duel[]>([]);
@@ -39,6 +49,17 @@ export default function Admin() {
       supabase.from("ng_state").select("value").eq("key", "brand").maybeSingle(),
       supabase.from("ng_duels").select("*").order("day", { ascending: false }).limit(8),
     ]);
+    const ms = await supabase.from("ng_manual_stats").select("*").order("day", { ascending: false }).limit(60);
+    if (!ms.error) {
+      const seen: Record<string, number> = {}; const next = { instagram: zeroRow(), tiktok: zeroRow(), youtube: zeroRow() } as Record<Plat, MRow>;
+      for (const r of ms.data ?? []) if (!(r.platform in seen)) { seen[r.platform] = r.day; next[r.platform as Plat] = Object.fromEntries(MKEYS.map((k) => [k, r[k] ?? 0])) as MRow; }
+      setMan(next); setManDay(seen);
+    }
+    const dlInit: Record<string, Record<string, Record<Plat, number>>> = {};
+    for (const x of (dl.data ?? []) as Duel[]) {
+      dlInit[x.id] = Object.fromEntries(x.options.map((o) => [o.side, { instagram: 0, tiktok: 0, youtube: 0, ...(o.manual_likes ?? {}) }]));
+    }
+    setDl(dlInit);
     setDuels((dl.data ?? []) as Duel[]);
     setBrand(((br.data?.value as { name?: string } | null)?.name) ?? "");
     setBlds((b.data ?? []) as Building[]); setCms((c.data ?? []) as Cm[]); setEps((e.data ?? []) as Ep[]);
@@ -56,12 +77,33 @@ export default function Admin() {
   const ok = (m: string) => { setMsg(m); setErr(""); }; const bad = (m: string) => { setErr(m); setMsg(""); };
   async function login() { const { error } = await supabase.auth.signInWithPassword({ email, password: pw }); error ? bad(error.message) : ok("Masuk."); }
 
-  async function saveInputs() {
-    const { error } = await supabase.from("ng_inputs").insert(ig); error ? bad(error.message) : ok("Angka IG disimpan (dipakai jika platform belum terhubung).");
+  async function saveManual() {
+    const day = lastDay + 1;
+    const rows = PLATS.filter((p) => MKEYS.some((k) => man[p][k] > 0)).map((p) => ({ day, platform: p, ...man[p], updated_at: new Date().toISOString() }));
+    if (!rows.length) return bad("Isi minimal satu platform.");
+    const { error } = await supabase.from("ng_manual_stats").upsert(rows, { onConflict: "day,platform" });
+    error ? bad(error.message) : (ok(`Angka disimpan untuk run hari ke-${day} (${rows.map((r) => PLAT_LABEL[r.platform]).join(", ")}).`), load());
+  }
+  async function saveDuelLikes(x: Duel) {
+    const m = dl[x.id] ?? {};
+    const options = x.options.map((o) => {
+      const ml = m[o.side] ?? { instagram: 0, tiktok: 0, youtube: 0 };
+      return { ...o, manual_likes: ml, likes: Object.values(ml).reduce((s, v) => s + (+v || 0), 0) };
+    });
+    const { error } = await supabase.from("ng_duels").update({ options }).eq("id", x.id);
+    error ? bad(error.message) : (ok(`Like duel Day ${x.day} disimpan: ${options.map((o) => `${o.side}=${o.likes}`).join(", ")}.`), load());
+  }
+  async function copy(text: string, what: string) {
+    try { await navigator.clipboard.writeText(text); ok(`${what} disalin.`); } catch { bad("Tidak bisa menyalin; pilih teksnya manual."); }
+  }
+  async function markPosted(day: number) {
+    const { error } = await supabase.from("ng_episodes").update({ status: "published", platforms: { manual: { id: "posted by hand" } } }).eq("day", day);
+    error ? bad(error.message) : (ok(`Day ${day} ditandai sudah diposting manual.`), load());
   }
   async function addComment() {
     if (!nc.ig_user || !nc.text) return bad("Isi user dan komen.");
-    const { error } = await supabase.from("ng_comments").insert({ ...nc, status: "approved" }); error ? bad(error.message) : (ok("Komen ditambah."), setNc({ ig_user: "", text: "", likes: 0 }), load());
+    const { error } = await supabase.from("ng_comments").insert({ ...nc, ig_user: nc.ig_user.replace(/^@/, "").trim(), status: "approved" });
+    error ? bad(error.message) : (ok("Komen ditambah; dihitung di run berikutnya."), setNc({ ...nc, ig_user: "", text: "", likes: 0 }), load());
   }
   async function setStatus(id: number, status: string) { const { error } = await supabase.from("ng_comments").update({ status }).eq("id", id); error ? bad(error.message) : load(); }
   async function saveBuilding(b: Building) {
@@ -120,6 +162,20 @@ export default function Admin() {
       <div className="page-head"><div><h1>Admin</h1><div className="sub">{user}</div></div><button className="ghost" onClick={() => supabase.auth.signOut()}>Keluar</button></div>
       {msg && <p className="msg">{msg}</p>}{err && <p className="msg err">{err}</p>}
 
+      <h2>Mode manual: angka dari aplikasi</h2>
+      <div className="card" style={{ overflowX: "auto" }}>
+        <p className="empty" style={{ marginTop: 0 }}>Buka tiap aplikasi sebelum 00:01 WIB dan salin angka <b>total akun</b> (bukan kenaikan harian). Run hari ke-{lastDay + 1} memakai angka ini untuk platform yang API-nya belum terhubung. Kosongkan platform yang belum dipakai.</p>
+        <table><thead><tr><th>Platform</th>{MKEYS.map((k) => <th key={k}>{MLABEL[k]}</th>)}<th>Terakhir</th></tr></thead><tbody>
+          {PLATS.map((p) => (
+            <tr key={p}><td>{PLAT_LABEL[p]}</td>
+              {MKEYS.map((k) => <td key={k}><input type="number" min={0} value={man[p][k]} onChange={(e) => setMan({ ...man, [p]: { ...man[p], [k]: Math.max(0, +e.target.value) } })} style={{ width: 96 }} /></td>)}
+              <td className="empty">{manDay[p] != null ? `hari ke-${manDay[p]}` : "-"}</td></tr>
+          ))}
+        </tbody></table>
+        <div className="form" style={{ marginTop: 10 }}><button onClick={saveManual}>Simpan angka untuk hari ke-{lastDay + 1}</button></div>
+        <p className="empty" style={{ marginBottom: 0 }}>Instagram: Profil → Dasbor profesional → Insight (like/share/komen), follower di profil. TikTok: Profil (follower, like) dan Analitik. YouTube: Studio → Analitik.</p>
+      </div>
+
       <h2>Duel reel (minggu 1)</h2>
       <div className="card">
         <p className="empty" style={{ marginTop: 0 }}>Tanpa isian, run harian otomatis memilih dua bangunan berikutnya dan menghitung minimal like dari jumlah follower. Isi di sini untuk memilih sendiri.</p>
@@ -140,6 +196,26 @@ export default function Admin() {
             <td>{x.options.map((o) => x.result?.likes?.[o.side] ?? o.likes ?? 0).join(" / ")}</td>
             <td>{(x.status === "planned" || x.status === "open") && <button className="ghost" onClick={() => cancelDuel(x.id)}>Batalkan</button>}</td></tr>)}
         </tbody></table>}
+        {duels.filter((x) => x.status === "open").map((x) => (
+          <div key={x.id} style={{ marginTop: 14, borderTop: "1px solid var(--line)", paddingTop: 12 }}>
+            <b>Duel Day {x.day} (berlangsung)</b>
+            <p className="empty" style={{ margin: "4px 0 8px" }}>Posting dua reel ini, lalu salin jumlah like tiap reel dari tiap aplikasi sebelum run berikutnya (pemenang dihitung dari angka ini).</p>
+            <table><thead><tr><th>Reel</th><th>Video</th>{PLATS.map((p) => <th key={p}>Like {PLAT_LABEL[p]}</th>)}<th>Total</th></tr></thead><tbody>
+              {x.options.map((o) => {
+                const ml = dl[x.id]?.[o.side] ?? { instagram: 0, tiktok: 0, youtube: 0 };
+                const cap = o.caption;
+                return (
+                  <tr key={o.side}><td>{o.side}) {o.name}</td>
+                    <td>{o.video_url ? <a href={o.video_url} download target="_blank" rel="noreferrer" style={{ color: "var(--accent)" }}>Unduh</a> : "-"}{cap && <> · <button className="ghost" onClick={() => copy(cap, `Caption reel ${o.side}`)}>Salin caption</button></>}</td>
+                    {PLATS.map((p) => <td key={p}><input type="number" min={0} value={ml[p] ?? 0} style={{ width: 80 }}
+                      onChange={(e) => setDl({ ...dl, [x.id]: { ...(dl[x.id] ?? {}), [o.side]: { ...ml, [p]: Math.max(0, +e.target.value) } } })} /></td>)}
+                    <td>{Object.values(ml).reduce((s, v) => s + (+v || 0), 0)}</td></tr>
+                );
+              })}
+            </tbody></table>
+            <div className="form" style={{ marginTop: 8 }}><button onClick={() => saveDuelLikes(x)}>Simpan like duel</button></div>
+          </div>
+        ))}
       </div>
 
       <h2>Nama negara</h2>
@@ -189,22 +265,17 @@ export default function Admin() {
           {eps.map((e) => (
             <tr key={e.day}><td>{e.day}</td><td>{e.title}</td><td><span className="badge">{e.status}</span></td>
               <td>{Object.entries(e.platforms ?? {}).map(([k, v]) => `${k}: ${v.id ?? v.error ?? "-"}`).join(" · ")}</td>
-              <td>{e.status === "draft" && <button onClick={() => setEp(e.day, "approved")}>Setujui upload</button>}</td></tr>
+              <td style={{ whiteSpace: "nowrap" }}>
+                {e.video_url && <a href={e.video_url} download target="_blank" rel="noreferrer" style={{ color: "var(--accent)", marginRight: 8 }}>Unduh video</a>}
+                {e.caption && <button className="ghost" onClick={() => copy(fullCaption(e), `Caption Day ${e.day}`)}>Salin caption</button>}{" "}
+                {e.status !== "published" && <button className="ghost" onClick={() => markPosted(e.day)}>Sudah diposting manual</button>}{" "}
+                {e.status === "draft" && <button onClick={() => setEp(e.day, "approved")}>Setujui upload otomatis</button>}</td></tr>
           ))}
         </tbody></table> : <p className="empty">Belum ada episode. Pipeline akan mengisi tabel ini.</p>}
       </div>
 
       <h2>Laporan terbaru</h2>
       {reports.map((r) => <div className="card" key={r.id} style={{ marginBottom: 10 }}><b>{r.title}</b><pre style={{ whiteSpace: "pre-wrap", fontFamily: "inherit", fontSize: 14, margin: "8px 0 0" }}>{r.body}</pre></div>)}
-
-      <h2>Angka manual (cadangan jika platform belum terhubung)</h2>
-      <div className="card form">
-        {(["followers", "likes", "shares", "comments"] as const).map((k) => (
-          <label key={k}>{{ followers: "Follower (penduduk)", likes: "Like (pajak)", shares: "Share (pengaruh)", comments: "Komen (inspirasi)" }[k]}
-            <input type="number" min={0} value={ig[k]} onChange={(e) => setIg({ ...ig, [k]: +e.target.value })} /></label>
-        ))}
-        <button onClick={saveInputs}>Simpan</button>
-      </div>
 
       <h2>Syarat bangunan (threshold)</h2>
       <div className="card" style={{ overflowX: "auto" }}>
@@ -222,15 +293,18 @@ export default function Admin() {
 
       <h2>Komen / ide manual</h2>
       <div className="card form" style={{ marginBottom: 12 }}>
-        <label>User<input value={nc.ig_user} onChange={(e) => setNc({ ...nc, ig_user: e.target.value })} /></label>
+        <label>Platform<select value={nc.platform} onChange={(e) => setNc({ ...nc, platform: e.target.value })}>{PLATS.map((p) => <option key={p} value={p}>{PLAT_LABEL[p]}</option>)}</select></label>
+        <label>User<input value={nc.ig_user} onChange={(e) => setNc({ ...nc, ig_user: e.target.value })} placeholder="tanpa @" /></label>
         <label style={{ flex: 1 }}>Komen<input value={nc.text} onChange={(e) => setNc({ ...nc, text: e.target.value })} /></label>
         <label>Like<input type="number" min={0} value={nc.likes} onChange={(e) => setNc({ ...nc, likes: +e.target.value })} /></label>
         <button onClick={addComment}>Tambah</button>
       </div>
       <div className="card" style={{ overflowX: "auto" }}>
-        <table><thead><tr><th>User</th><th>Komen</th><th>Like</th><th>Status</th><th /></tr></thead><tbody>
+        <p className="empty" style={{ marginTop: 0 }}>Salin komen penting (vote polling, kode NG-…, ide) dari aplikasi. Tiap komen dihitung sekali (koin, suara) di run berikutnya.</p>
+        <table><thead><tr><th>User</th><th>Komen</th><th>Like</th><th>Status</th><th>Dihitung</th><th /></tr></thead><tbody>
           {cms.map((c) => (
-            <tr key={c.id}><td>@{c.ig_user}</td><td>{c.text}</td><td>{c.likes}</td><td><span className="badge">{c.status}</span></td>
+            <tr key={c.id}><td>@{c.ig_user} <span className="badge">{PLAT_LABEL[(c.platform ?? "instagram") as Plat] ?? c.platform}</span></td><td>{c.text}</td><td>{c.likes}</td><td><span className="badge">{c.status}</span></td>
+              <td className="empty">{c.used_day != null ? `hari ke-${c.used_day}` : "belum"}</td>
               <td>{c.status !== "approved" && <button className="ghost" onClick={() => setStatus(c.id, "approved")}>Setujui</button>} <button className="ghost" onClick={() => setStatus(c.id, "rejected")}>Tolak</button></td></tr>
           ))}
         </tbody></table>

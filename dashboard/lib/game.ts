@@ -55,5 +55,5 @@ export function levelOf(c: WorldCitizen) {
   return lvl;
 }
 
-export type DuelOption = { side: "A" | "B"; building_id: string; name: string; style: number; pitch?: string[]; custom?: boolean; video_url?: string | null; media?: Record<string, string>; likes?: number };
+export type DuelOption = { side: "A" | "B"; building_id: string; name: string; style: number; pitch?: string[]; custom?: boolean; video_url?: string | null; media?: Record<string, string>; likes?: number; manual_likes?: Record<string, number>; caption?: string };
 export type Duel = { id: number; day: number; status: string; min_likes: number; followers_at_start: number; options: DuelOption[]; winner: "A" | "B" | null; result: { likes?: Record<string, number>; built?: boolean; reason?: string } | null };

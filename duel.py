@@ -53,6 +53,8 @@ def make_reels(day, duel, out_dir):
                                      "caption": f"PILIHAN {opt['side']}: {opt['name']}! Like reel ini kalau kamu pilih {opt['side']}. "
                                                 f"Yang paling banyak like dan minimal {duel['min_likes']} like akan dibangun di negara kita.",
                                      "hashtags": config()["base_hashtags"], "video": str(d / "video.mp4")})
+        post = json.loads((d / "post.json").read_text(encoding="utf-8"))
+        opt["caption"] = post["caption"] + "\n\n" + " ".join(post["hashtags"])  # shown on the admin page for manual posting
         out[opt["side"]] = str(d / "video.mp4")
     return out
 
@@ -61,13 +63,24 @@ def read_likes(duel, fixture_likes=None):
     """{'A': n, 'B': n}: each reel's likes summed over the platforms it was posted on."""
     if fixture_likes:
         return fixture_likes
-    from stats.likes import total_likes
     out = {}
     for s in "AB":
         o = next(x for x in duel["options"] if x["side"] == s)
-        out[s], detail = total_likes(o.get("media"))
+        out[s], detail = option_likes(o)
         print(f"[duel] reel {s} likes: {out[s]} {detail}")
     return out
+
+
+def option_likes(o):
+    """API likes for platforms the reel was posted to through the API + likes typed on the admin page for the rest."""
+    from stats.likes import total_likes
+    media = {k: v for k, v in (o.get("media") or {}).items() if v}
+    n, detail = total_likes(media)
+    api_ok = {p for p, v in detail.items() if isinstance(v, int)}
+    for plat, m in (o.get("manual_likes") or {}).items():
+        if plat not in api_ok and m:
+            n += int(m); detail[plat] = f"{int(m)} (manual)"
+    return n, detail
 
 
 def refresh_likes():
@@ -76,9 +89,8 @@ def refresh_likes():
     for duel in sb.get("ng_duels?status=eq.open&select=*"):
         changed = False
         for o in duel["options"]:
-            if o.get("media"):
-                from stats.likes import total_likes
-                n, _ = total_likes(o["media"])
+            if o.get("media") or o.get("manual_likes"):
+                n, _ = option_likes(o)
                 if n != o.get("likes"):
                     o["likes"], changed = n, True
         if changed:
