@@ -187,7 +187,10 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
     if game.duel_enabled(day, g):
         extra.append("MINGGU DUEL: bangunan hanya dibangun lewat duel dua reel presentasi (A vs B); like terbanyak menang jika capai minimal. "
                      "Ajak penonton like reel presentasi hari ini untuk memilih. Pajak tidak dipakai minggu ini.")
-    write_json(d / "context.json", {"poll_target": poll_target, "duel_target": duel_target,
+    forbidden = []
+    if not upgrades:   # the system knows nobody upgraded today: any such claim in the script is false
+        forbidden += [r"naik level", r"level (dua|tiga|empat|lima|[2-5])", r"up-?grade", r"ditingkatkan"]
+    write_json(d / "context.json", {"forbidden": forbidden, "poll_target": poll_target, "duel_target": duel_target,
                                     "disable_auto": game.duel_enabled(day, g), "extra_facts": "\n".join(extra)})
     cmd = [sys.executable, "-I", str(ROOT / "pipeline.py"), "episode", "--day", str(day), "--until", until]
     if offline:

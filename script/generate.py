@@ -102,6 +102,16 @@ def call_gemini(prompt, cfg):
     raise SystemExit(f"Gemini failed for all models. Last: {last}")
 
 
+def check_facts(ep, forbidden):
+    """Hard guard against invented facts: patterns the system knows are false today (from daily.py) must not appear."""
+    import re
+    texts = [sh.voiceover_text for sh in ep.shots] + [ep.ig_caption, ep.title, ep.hook]
+    for pat in forbidden or []:
+        for t in texts:
+            if re.search(pat, t, re.I):
+                raise ValueError(f"Kalimat \"{t}\" mengandung klaim yang SALAH hari ini (pola '{pat}'). Tulis ulang tanpa klaim itu; ikuti FAKTA GAME persis.")
+
+
 def merge_bible(old, ep, day, plan, totals, campfire_final):
     u = ep.bible_update
     story = {"day": day, "running_gags": u.running_gags, "story_so_far": u.story_so_far,
@@ -142,7 +152,9 @@ def run(day, offline=False, force=False, max_tries=3):
         else:
             raw = call_gemini(build_prompt(day, bible, inputs, cfg, note, facts), cfg)
         try:
-            ep = Episode.model_validate(raw); break
+            ep = Episode.model_validate(raw)
+            check_facts(ep, ctx.get("forbidden"))
+            break
         except Exception as e:  # validation error -> feed back to the model
             note = str(e)[:1500]; write_json(d / f"episode.invalid.{attempt}.json", raw)
             print(f"attempt {attempt}: invalid -> {note[:200]}")
