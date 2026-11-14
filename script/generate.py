@@ -76,7 +76,24 @@ def call_gemini(prompt, cfg):
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {"responseMimeType": "application/json", "responseSchema": gemini_schema(), "temperature": 1.0},
     }
-    last = ""
+    last, busy = "", False
+    for rnd, wait in enumerate((0, 120, 300)):   # high-demand spikes last minutes: whole rounds over all models
+        if rnd and not busy:
+            break
+        if wait:
+            print(f"[gemini] all models busy; waiting {wait}s before round {rnd + 1}")
+            time.sleep(wait)
+        busy = False
+        out = _try_models(candidates, body, key)
+        if isinstance(out, dict):
+            return out
+        last, busy = out
+    raise SystemExit(f"Gemini failed for all models. Last: {last}")
+
+
+def _try_models(candidates, body, key):
+    """Parsed JSON on success, else (last error, every failure was temporary)."""
+    last, busy = "", True
     for model in candidates:
         req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), method="POST",
                                      headers={"Content-Type": "application/json", "x-goog-api-key": key})
@@ -92,6 +109,7 @@ def call_gemini(prompt, cfg):
                     time.sleep(5 * 2 ** attempt); continue
                 last = f"model {model}: HTTP {e.code} {msg}"
                 print(f"[gemini] {last}")
+                busy = busy and e.code in (429, 500, 503)
                 break  # 404/400 for this model name -> try the next candidate
             except (TimeoutError, urllib.error.URLError, ConnectionError) as e:   # slow/unreachable: retry once, then next model
                 last = f"model {model}: {type(e).__name__} {e}"
@@ -99,7 +117,7 @@ def call_gemini(prompt, cfg):
                 if attempt < 1:
                     continue
                 break
-    raise SystemExit(f"Gemini failed for all models. Last: {last}")
+    return last, busy
 
 
 def check_facts(ep, forbidden):
