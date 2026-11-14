@@ -7,6 +7,7 @@ on:
       day: { description: "Force a day number (optional)", required: false }
       dry_run: { description: "No dashboard writes / uploads", type: boolean, default: false }
       offline: { description: "Use fixture script instead of Gemini (testing)", type: boolean, default: false }
+      until: { description: "Stop after this stage: script, timeline, voice or render", required: false, default: "render" }
 concurrency: { group: daily-episode, cancel-in-progress: false }
 jobs:
   episode:
@@ -40,6 +41,7 @@ jobs:
           if [ -n "${{ github.event.inputs.day }}" ]; then ARGS="$ARGS --day ${{ github.event.inputs.day }}"; fi
           if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then ARGS="$ARGS --dry-run"; fi
           if [ "${{ github.event.inputs.offline }}" = "true" ]; then ARGS="$ARGS --offline"; fi
+          if [ -n "${{ github.event.inputs.until }}" ]; then ARGS="$ARGS --until ${{ github.event.inputs.until }}"; fi
           python daily.py $ARGS
       - uses: actions/upload-artifact@v4
         if: always()
