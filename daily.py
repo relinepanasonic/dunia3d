@@ -34,8 +34,12 @@ def safe_get(path):
 
 
 def today_day(cfg):
+    """Series day for today (Jakarta). None when no launch date is set yet or it is still in the future."""
+    if not cfg.get("start_date"):
+        return None
     start = dt.date.fromisoformat(cfg["start_date"])
-    return (dt.datetime.now(ZoneInfo("Asia/Jakarta")).date() - start).days + 1
+    n = (dt.datetime.now(ZoneInfo("Asia/Jakarta")).date() - start).days + 1
+    return n if n >= 1 else None
 
 
 def restore_bible(day):
@@ -57,6 +61,9 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
         write_json(SERIES / "brand.json", brand)
     cfg = config()
     day = day or today_day(cfg)
+    if not day:
+        print(f"[loop] series not started yet (start_date={cfg.get('start_date')}): nothing to do today")
+        return None
     d = day_dir(day)
     print(f"[loop] === DAY {day} ===")
     bible = restore_bible(day)

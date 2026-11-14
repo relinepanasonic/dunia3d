@@ -1,56 +1,22 @@
 {
-  "day": 3,
-  "tier": "Kota Neon",
-  "pajak": 470,
-  "scene": {
-    "sign": true,
-    "chair": true,
-    "houses": 2,
-    "styles": [
-      0,
-      0
-    ],
-    "campfire": true
-  },
-  "score": 428,
-  "totals": {
-    "likes": 660,
-    "shares": 40,
-    "comments": 44,
-    "followers": 125
-  },
-  "pengaruh": 40,
-  "buildings": [
-    "Kedai Nutrisi",
-    "Dapur Free Meal"
-  ],
-  "followers": 125,
-  "inspirasi": 44,
-  "population": 126,
+  "day": 0,
+  "tier": "Dusun Digital",
+  "pajak": 0,
+  "scene": {"sign": true, "chair": true, "houses": 0, "styles": [], "campfire": false},
+  "score": 0,
+  "totals": {"likes": 0, "shares": 0, "comments": 0, "followers": 0},
+  "pengaruh": 0,
+  "buildings": [],
+  "followers": 0,
+  "inspirasi": 0,
+  "population": 1,
   "running_gags": [
     "Lo follow = jadi penduduk",
-    "Komen teratas = gue bangun",
-    "Polling warga menentukan bangunan",
-    "Tower Technology disuruh sabar"
+    "Like = bayar pajak, share = pengaruh, komen = inspirasi"
   ],
-  "story_so_far": "Day 2: Kedai Nutrisi berdiri. Day 3: polling Free Meal vs Tower Technology, Free Meal menang 6-4; Kota Neon tercapai.",
+  "story_so_far": "Belum ada apa-apa: Presiden berdiri sendirian di pulau kosong. Hari ini negara dimulai dari nol.",
   "pending_target": null,
-  "buildings_built": [
-    "kedai_nutrisi",
-    "poll1_0"
-  ],
-  "custom_buildings": [
-    {
-      "id": "poll1_0",
-      "name": "Dapur Free Meal",
-      "slot": 8,
-      "pajak": 150,
-      "style": 0,
-      "poll_id": 1,
-      "penduduk": 0,
-      "pengaruh": 0,
-      "inspirasi": 0
-    }
-  ],
-  "next_episode_teaser": "Day 4: polling baru; Tower Technology menunggu giliran."
+  "buildings_built": [],
+  "custom_buildings": [],
+  "next_episode_teaser": "Day 1: negara dimulai dari nol; minggu pertama warga memilih bangunan lewat duel like."
 }
