@@ -68,23 +68,32 @@ def call_gemini(prompt, cfg):
     key = os.environ.get("GEMINI_API_KEY")
     if not key:
         raise SystemExit("GEMINI_API_KEY missing. Put it in .env (see .env.example) or run with --offline.")
-    model = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    # an env var that is set but empty (GitHub does this for an unset variable) must not count as a model name
+    primary = (os.environ.get("GEMINI_MODEL") or "").strip() or "gemini-2.5-flash"
+    candidates = [primary] + [m for m in ("gemini-flash-latest", "gemini-2.5-flash") if m != primary]
     body = {
         "systemInstruction": {"parts": [{"text": SYSTEM.format(series=cfg["series_name"], character=cfg["character"])}]},
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
         "generationConfig": {"responseMimeType": "application/json", "responseSchema": gemini_schema(), "temperature": 1.0},
     }
-    req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), method="POST",
-                                 headers={"Content-Type": "application/json", "x-goog-api-key": key})
-    for attempt in range(4):
-        try:
-            with urllib.request.urlopen(req, timeout=120) as r:
-                data = json.load(r)
-            return json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
-        except urllib.error.HTTPError as e:
-            if e.code in (429, 500, 503) and attempt < 3:
-                time.sleep(5 * 2 ** attempt); continue
-            raise SystemExit(f"Gemini HTTP {e.code}: {e.read().decode()[:500]}")
+    last = ""
+    for model in candidates:
+        req = urllib.request.Request(API.format(model=model), data=json.dumps(body).encode(), method="POST",
+                                     headers={"Content-Type": "application/json", "x-goog-api-key": key})
+        for attempt in range(4):
+            try:
+                with urllib.request.urlopen(req, timeout=120) as r:
+                    data = json.load(r)
+                print(f"[gemini] model {model} ok")
+                return json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
+            except urllib.error.HTTPError as e:
+                msg = e.read().decode()[:400]
+                if e.code in (429, 500, 503) and attempt < 3:
+                    time.sleep(5 * 2 ** attempt); continue
+                last = f"model {model}: HTTP {e.code} {msg}"
+                print(f"[gemini] {last}")
+                break  # 404/400 for this model name -> try the next candidate
+    raise SystemExit(f"Gemini failed for all models. Last: {last}")
 
 
 def merge_bible(old, ep, day, plan, totals, campfire_final):
