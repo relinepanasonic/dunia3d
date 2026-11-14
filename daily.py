@@ -167,6 +167,23 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
         wn = next(o for o in pd["options"] if o["side"] == rs["winner"])["name"]
         extra.append(f"HASIL DUEL (hitungan sistem): {rs['likes']['A']} like untuk A, {rs['likes']['B']} like untuk B, minimal {pd['min_likes']}. "
                      + (f"{wn} menang dan dibangun GRATIS." if rs["built"] else f"{wn} unggul tapi belum capai minimal, pembangunan ditunda."))
+    duel_today = None
+    if game.duel_enabled(day, g):
+        planned = (safe_get(f"ng_duels?day=eq.{day}&select=*") or [None])[0]
+        taken = [t["id"] for t in (duel_target, poll_target) if t]
+        cands = game.pick_candidates(dict(bible, buildings_built=list(bible.get("buildings_built", [])) + taken), 2, g)
+        if planned and planned.get("status") in ("planned", "open"):
+            duel_today = dict(planned)
+            duel_today["options"] = [dict(game.duel_option({"id": o.get("building_id", f"custom{i}"), "name": o["name"], "style": o.get("style", 0),
+                                                            "pitch": o.get("pitch") or None}, o["side"], bool(o.get("custom"))),
+                                          **{k: o[k] for k in o if k in ("video_url", "media")}) for i, o in enumerate(planned["options"])]
+        elif len(cands) == 2:
+            duel_today = {"day": day, "min_likes": game.duel_min_likes(totals["followers"], g), "followers_at_start": totals["followers"],
+                          "options": [game.duel_option(cands[0], "A"), game.duel_option(cands[1], "B")]}
+        if duel_today:
+            a_, b_ = duel_today["options"]
+            extra.append(f"DUEL HARI INI (dua reel presentasi diposting hari ini): A) {a_['name']} vs B) {b_['name']}, minimal {duel_today['min_likes']} like agar dibangun. "
+                         "Sebut HANYA dua pilihan ini (jangan mengarang pilihan lain) dan ajak penonton like reel pilihannya.")
     if game.duel_enabled(day, g):
         extra.append("MINGGU DUEL: bangunan hanya dibangun lewat duel dua reel presentasi (A vs B); like terbanyak menang jika capai minimal. "
                      "Ajak penonton like reel presentasi hari ini untuk memilih. Pajak tidak dipakai minggu ini.")
@@ -220,17 +237,8 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
 
     # ---- 7b. today's duel: two presentation reels (only in duel week, only when we really render)
     if game.duel_enabled(day, g) and until == "render":
-        planned = (safe_get(f"ng_duels?day=eq.{day}&select=*") or [None])[0]
-        cands = game.pick_candidates(after, 2, g)
-        if planned and planned.get("status") in ("planned", "open"):
-            duel = dict(planned)
-            duel["options"] = [dict(game.duel_option({"id": o.get("building_id", f"custom{i}"), "name": o["name"], "style": o.get("style", 0),
-                                                       "pitch": o.get("pitch") or None}, o["side"], bool(o.get("custom"))), **{k: o[k] for k in o if k in ("video_url", "media")}) for i, o in enumerate(planned["options"])]
-        elif len(cands) == 2:
-            duel = {"day": day, "min_likes": game.duel_min_likes(totals["followers"], g), "followers_at_start": totals["followers"],
-                    "options": [game.duel_option(cands[0], "A"), game.duel_option(cands[1], "B")]}
-        else:
-            duel = None
+        duel = duel_today
+        if duel is None:
             print("[duel] fewer than two unbuilt buildings left; no duel today")
         if duel:
             print(f"[duel] reels for day {day}: {duel['options'][0]['name']} vs {duel['options'][1]['name']} (minimum {duel['min_likes']} like)")

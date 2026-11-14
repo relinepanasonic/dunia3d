@@ -36,7 +36,7 @@ RULES = """ATURAN OUTPUT (JSON saja, sesuai schema):
 - Jika bangunan BERHASIL dibangun: naikkan houses +1 setelah momen pembangunan. Jika belum cukup: houses tetap, buat cliffhanger 'kurang X lagi' dan ajak like/share/komen sesuai kekurangan.
 - Gaya visual dunia: FUTURISTIK (kota sci-fi neon, hover, hologram). Sebut elemen futuristik, bukan desa/hutan.
 - Jangan ada dua overlay besar yang menumpuk di shot yang sama (satu overlay per shot).
-- Hormati continuity dari series bible; komen teratas (likes terbanyak) jadi bangunan/aktivitas utama episode ini.
+- JANGAN MENGARANG: semua angka, nama bangunan, nama warga, pilihan duel/polling dan kejadian harus berasal dari FAKTA GAME dan INPUT di atas. Jika fakta bilang tidak ada upgrade/pembangunan, jangan bilang ada. Jika sesuatu tidak ada di fakta, jangan disebut.\n- Hormati continuity dari series bible; komen teratas (likes terbanyak) jadi bangunan/aktivitas utama episode ini.
 - ig_caption: 1-2 kalimat gaul + ajakan follow; hashtags 5-8 item (diawali #).
 - bible_update: keadaan negara SETELAH episode ini (population = followers + 1 kecuali ada alasan, buildings daftar lengkap, running_gags, story_so_far ringkas, next_episode_teaser)."""
 
@@ -152,7 +152,11 @@ def run(day, offline=False, force=False, max_tries=3):
 
     out = ep.model_dump(exclude_none=True)
     out["day"] = day
-    out["hashtags"] = list(dict.fromkeys(ep.hashtags + cfg["base_hashtags"]))
+    seen, tags = set(), []
+    for h in ep.hashtags + cfg["base_hashtags"]:
+        if h.lower() not in seen:
+            seen.add(h.lower()); tags.append(h)
+    out["hashtags"] = tags
     write_json(ep_path, out)
     last = ep.shots[-1].scene_state
     after = merge_bible(bible, ep, day, plan, totals, last.campfire)
