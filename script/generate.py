@@ -69,8 +69,8 @@ def call_gemini(prompt, cfg):
     if not key:
         raise SystemExit("GEMINI_API_KEY missing. Put it in .env (see .env.example) or run with --offline.")
     # an env var that is set but empty (GitHub does this for an unset variable) must not count as a model name
-    primary = (os.environ.get("GEMINI_MODEL") or "").strip() or "gemini-2.5-flash"
-    candidates = [primary] + [m for m in ("gemini-flash-latest", "gemini-2.5-flash") if m != primary]
+    primary = (os.environ.get("GEMINI_MODEL") or "").strip() or "gemini-3.8-flash"
+    candidates = [primary] + [m for m in ("gemini-3.8-flash", "gemini-flash-latest") if m != primary]
     body = {
         "systemInstruction": {"parts": [{"text": SYSTEM.format(series=cfg["series_name"], character=cfg["character"])}]},
         "contents": [{"role": "user", "parts": [{"text": prompt}]}],
@@ -82,17 +82,23 @@ def call_gemini(prompt, cfg):
                                      headers={"Content-Type": "application/json", "x-goog-api-key": key})
         for attempt in range(4):
             try:
-                with urllib.request.urlopen(req, timeout=120) as r:
+                with urllib.request.urlopen(req, timeout=300) as r:
                     data = json.load(r)
                 print(f"[gemini] model {model} ok")
                 return json.loads(data["candidates"][0]["content"]["parts"][0]["text"])
-            except urllib.error.HTTPError as e:
+            except urllib.error.HTTPError as e:   # (HTTPError must be handled before its parent URLError)
                 msg = e.read().decode()[:400]
                 if e.code in (429, 500, 503) and attempt < 3:
                     time.sleep(5 * 2 ** attempt); continue
                 last = f"model {model}: HTTP {e.code} {msg}"
                 print(f"[gemini] {last}")
                 break  # 404/400 for this model name -> try the next candidate
+            except (TimeoutError, urllib.error.URLError, ConnectionError) as e:   # slow/unreachable: retry once, then next model
+                last = f"model {model}: {type(e).__name__} {e}"
+                print(f"[gemini] {last}")
+                if attempt < 1:
+                    continue
+                break
     raise SystemExit(f"Gemini failed for all models. Last: {last}")
 
 
