@@ -152,7 +152,7 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
         c["level"], c["spent"] = lvl, spent
     new_pods = sorted(k[1] for k in keys if k not in existing)
     economy = (f"EKONOMI: dividen pajak hari ini {int(pool)} koin dibagi ke {len(keys)} warga; "
-               f"{len(new_pods)} rumah pod gratis baru; upgrade rumah: {', '.join(upgrades) if upgrades else 'belum ada'}.")
+               f"{len(new_pods)} rumah pod gratis baru; upgrade rumah: {', '.join(upgrades) if upgrades else 'TIDAK ADA (jangan bilang ada rumah atau pod yang naik level)'}.")
 
     # ---- 5/6. script, voice, render (pipeline stages)
     extra = []
@@ -161,7 +161,7 @@ def run(day=None, fixture=None, offline=False, until="render", upload=True, dry=
     extra += announce
     extra.append(economy + " (Setiap warga dapat rumah pod gratis; like+share menjadi dividen untuk semua warga; rumah bisa di-upgrade dengan koin.)")
     if citizens:
-        extra.append("WARGA TERPENGARUH: " + ", ".join(f"@{c['handle']} (pengaruh {c['pengaruh']}, koin {c['coins']})" for c in citizens[:3]))
+        extra.append("WARGA TERPENGARUH (hanya nama dan angka ini yang boleh disebut): " + ", ".join(f"@{c['handle']} (pengaruh {c['pengaruh']}, koin {c['coins']})" for c in citizens[:3]))
     if duel_closed:
         pd, rs = duel_closed
         wn = next(o for o in pd["options"] if o["side"] == rs["winner"])["name"]
